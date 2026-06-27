@@ -11,7 +11,7 @@ Run once before anything else.
 
 ```bash
 pnpm add \
-  @expo/vector-icons \
+  @react-native-vector-icons/ionicons \
   expo-secure-store \
   @react-native-async-storage/async-storage \
   expo-notifications \
@@ -22,7 +22,7 @@ pnpm add \
   expo-linear-gradient \
   react-native-svg \
   react-native-safe-area-context \
-  react-native-razorpay \
+  react-native-webview \
   zustand
 ```
 
@@ -1101,7 +1101,7 @@ const onboard = useMutation({
 
 ## Phase 15 — Tab Navigator (`src/app/(tabs)/_layout.tsx`)
 
-Copy verbatim from `old-frontend/app/(tabs)/_layout.tsx`. Zero changes needed — imports `COLORS` from `@/src/theme`, uses Ionicons.
+Copy from `old-frontend/app/(tabs)/_layout.tsx`. One import change: `import { Ionicons } from "@expo/vector-icons"` → `import Ionicons from "@react-native-vector-icons/ionicons"`.
 
 ---
 
@@ -1250,22 +1250,94 @@ Keep `expo-location` permission request to set `coords`. Remove manual fetch. JS
 
 ## Phase 22 — Subscription Screen (`src/app/subscription.tsx`)
 
+**Payment method: WebView-based Razorpay Checkout** (not `react-native-razorpay`).
+Rationale: `react-native-razorpay` does not support Expo's New Architecture (Interop Layer is unstable on iOS). We use `react-native-webview` which natively supports the New Architecture.
+
 ```ts
 const { data: plans = [], isLoading } = useSubscriptionPlans();
 const createOrder = useCreateOrder();
 const verifyPayment = useVerifyPayment();
 const { refresh } = useAuthStore();
+const [webviewHtml, setWebviewHtml] = useState<string | null>(null);
 ```
 
 Payment flow:
-1. `createOrder.mutate({ plan, currency })` → get `order_id`, `amount`, `key_id`
-2. Open Razorpay with those values
-3. On Razorpay success callback → `verifyPayment.mutate({ order_id, payment_id, signature })`
-4. On verify success → `refresh()` to update user subscription in store
+1. User taps a plan → `createOrder.mutate({ plan, currency })` → get `order_id`, `amount`, `key_id`
+2. Build an HTML string containing the standard Razorpay Web Checkout script, pre-filled with the order details:
 
-Remove `const [plans, setPlans] = useState([])` + load effect. JSX verbatim.
+```ts
+function buildRazorpayHtml(order: PaymentOrder): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  var options = {
+    key: "${order.key_id}",
+    amount: "${order.amount}",
+    currency: "${order.currency}",
+    order_id: "${order.order_id}",
+    name: "FitX",
+    description: "Subscription",
+    theme: { color: "#D4AF37" },
+    handler: function(response) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: "success", ...response }));
+    },
+    modal: {
+      ondismiss: function() {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: "dismiss" }));
+      }
+    }
+  };
+  var rzp = new Razorpay(options);
+  rzp.on("payment.failed", function(r) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: "failed", ...r.error }));
+  });
+  rzp.open();
+</script>
+</body>
+</html>`;
+}
+```
 
-**Test gate:** Plans list renders. Razorpay sheet opens. (Payment itself requires live key.)
+3. Set `webviewHtml` to render a full-screen `<WebView>` modal with `source={{ html }}` and `originWhitelist={["*"]}`.
+4. In the WebView's `onMessage` handler, parse the JSON payload:
+   - `type === "success"` → hide WebView → `verifyPayment.mutate({ razorpay_order_id, razorpay_payment_id, razorpay_signature })`
+   - `type === "dismiss"` or `"failed"` → hide WebView → show alert
+
+5. On verify success → `refresh()` to update user subscription in store, navigate away.
+
+```tsx
+{webviewHtml && (
+  <Modal visible animationType="slide">
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
+      <WebView
+        source={{ html: webviewHtml }}
+        originWhitelist={["*"]}
+        javaScriptEnabled
+        onMessage={(e) => {
+          const msg = JSON.parse(e.nativeEvent.data);
+          setWebviewHtml(null);
+          if (msg.type === "success") {
+            verifyPayment.mutate({
+              razorpay_order_id: msg.razorpay_order_id,
+              razorpay_payment_id: msg.razorpay_payment_id,
+              razorpay_signature: msg.razorpay_signature,
+            }, { onSuccess: () => { refresh(); router.back(); } });
+          } else {
+            Alert.alert("Payment cancelled", msg.description ?? "");
+          }
+        }}
+      />
+    </SafeAreaView>
+  </Modal>
+)}
+```
+
+Remove `const [plans, setPlans] = useState([])` + load effect. Remove any `react-native-razorpay` imports.
+
+**Test gate:** Plans list renders. Tapping a plan opens the Razorpay WebView. (Full payment requires live key.)
 
 ---
 
@@ -1344,6 +1416,7 @@ Copy verbatim.
 
 | Old pattern | New pattern |
 |---|---|
+| `import { Ionicons } from "@expo/vector-icons"` | `import Ionicons from "@react-native-vector-icons/ionicons"` |
 | `import { useAuth } from "@/src/auth"` | `import { useAuthStore } from "@/src/store/auth"` |
 | `const { user, login, logout, refresh } = useAuth()` | `const { user, login, logout, refresh } = useAuthStore()` |
 | `import { useI18n } from "@/src/i18n"` | `import { useI18nStore } from "@/src/store/i18n"` |
@@ -1408,7 +1481,6 @@ frontend/
       query.tsx          (already exists)
     types/
       api.ts
-      react-native-razorpay.d.ts
     utils/
       storage/
         storage-base.ts
