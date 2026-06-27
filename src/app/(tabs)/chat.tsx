@@ -19,6 +19,10 @@ import { useRouter } from "expo-router";
 import { useSendMessage } from "@/src/hooks/useChat";
 import { COLORS, RADIUS, SPACING } from "@/src/theme";
 import { useKeyboardBehavior } from "@/src/hooks/useKeyboardBehavior";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -80,8 +84,41 @@ export default function Chat() {
     },
   ]);
   const [input, setInput] = useState("");
+  const [recognizing, setRecognizing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const sendMsg = useSendMessage();
+
+  useSpeechRecognitionEvent("start", () => {
+    setRecognizing(true);
+  });
+  useSpeechRecognitionEvent("end", () => setRecognizing(false));
+  useSpeechRecognitionEvent("result", (event) => {
+    const transcript = event.results[0]?.transcript ?? "";
+    if (transcript) setInput(transcript);
+  });
+  useSpeechRecognitionEvent("error", (event) => {
+    console.warn("Speech error:", event.error, event.message);
+    setRecognizing(false);
+  });
+
+  const handleMic = async () => {
+    if (recognizing) {
+      ExpoSpeechRecognitionModule.stop();
+      return;
+    }
+
+    const { granted } =
+      await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!granted) {
+      return;
+    }
+
+    ExpoSpeechRecognitionModule.start({
+      lang: "en-US",
+      interimResults: true,
+      continuous: false,
+    });
+  };
 
   const send = (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
@@ -118,10 +155,10 @@ export default function Chat() {
         keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 8}
       > */}
       <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "transparent" }}
-      behavior={behaviour}
-      keyboardVerticalOffset={0}
-    >
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        behavior={behaviour}
+        keyboardVerticalOffset={0}
+      >
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={styles.messages}
@@ -198,6 +235,18 @@ export default function Chat() {
             style={styles.input}
             onSubmitEditing={() => send()}
           />
+          <TouchableOpacity
+            testID="chat-mic"
+            onPress={handleMic}
+            style={[styles.sendBtn, recognizing && styles.micActive]}
+            disabled={sendMsg.isPending}
+          >
+            <Ionicons
+              name={recognizing ? "stop" : "mic"}
+              size={22}
+              color="#000"
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             testID="chat-send"
             onPress={() => send()}
@@ -296,5 +345,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.goldPremium,
     alignItems: "center",
     justifyContent: "center",
+  },
+  micActive: {
+    backgroundColor: "#ff4444",
   },
 });
