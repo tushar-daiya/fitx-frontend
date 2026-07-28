@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "756004000089",
+    "project_id": "fitx-10c3d",
+    "storage_bucket": "fitx-10c3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:756004000089:android:bd195a6c00317050e2bc48",
+        "android_client_info": {
+          "package_name": "com.fitx.health"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5qkanbYSppHiXXclHOtMcZczJOvrKA1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

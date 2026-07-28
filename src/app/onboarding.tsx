@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
+import { track } from "@/src/lib/analytics";
 import { COLORS, RADIUS, SPACING } from "@/src/theme";
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -87,8 +88,11 @@ export default function Onboarding() {
     mutationFn: (body: OnboardingBody) =>
       apiFetch("/users/onboarding", { method: "POST", body }),
     onSuccess: async () => {
+      track("onboarding_complete", { goal, level, diet, gender });
       await refresh();
-      router.replace("/(tabs)/home");
+      // No plan is granted at signup — send the user to the trial screen to
+      // explicitly start their free trial before entering the app.
+      router.replace("/start-trial");
     },
     onError: (e: any) => Alert.alert("Error", e.message),
   });
@@ -100,14 +104,14 @@ export default function Onboarding() {
     if (step === 3) {
       e = numErr(weight, "weight", "Current weight");
       if (!e) e = numErr(target, "target", "Target weight");
-      if (!e) {
-        const w = parseFloat(weight);
-        const t = parseFloat(target);
-        if (goal === "fat_loss" && t >= w)
-          e = "Target weight should be less than current weight for fat loss";
-        if (goal === "lean_bulk" && t <= w)
-          e = "Target weight should be greater than current weight for lean bulk";
-      }
+    }
+    if (step === 4) {
+      const w = parseFloat(weight);
+      const t = parseFloat(target);
+      if (goal === "fat_loss" && t >= w)
+        e = "Target weight should be less than current weight for fat loss";
+      if (goal === "lean_bulk" && t <= w)
+        e = "Target weight should be greater than current weight for lean bulk";
     }
     setErr(e);
     return e === null;
@@ -116,6 +120,7 @@ export default function Onboarding() {
   const next = () => {
     if (!validateStep()) return;
     setErr(null);
+    track("onboarding_step", { step, next_step: Math.min(6, step + 1) });
     setStep((s) => (Math.min(6, s + 1) as Step));
   };
 

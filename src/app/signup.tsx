@@ -54,7 +54,7 @@ export default function Signup() {
           <Text style={styles.brand}>FitX</Text>
           <View style={styles.card}>
             <Text style={styles.heading}>Create your account</Text>
-            <Text style={styles.sub}>7-day free trial included</Text>
+            <Text style={styles.sub}>7-day free trial available after a quick setup</Text>
 
             <TextInput
               testID="signup-name"
@@ -93,7 +93,7 @@ export default function Signup() {
               {busy ? (
                 <ActivityIndicator color="#000" />
               ) : (
-                <Text style={styles.primaryBtnText}>START FREE TRIAL</Text>
+                <Text style={styles.primaryBtnText}>CREATE ACCOUNT</Text>
               )}
             </TouchableOpacity>
 

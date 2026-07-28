@@ -11,12 +11,33 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const { data: status } = useSubscriptionStatus(!!user);
 
-  const isAdmin = user?.role === "admin";
-  const onSubscription =
-    segments.includes("subscription" as never) || segments.includes("login" as never);
+  // Note: the `trial_ended` analytics event is emitted server-side (see the
+  // backend trial sweep) so it fires even for users who never reopen the app.
 
+  const isAdmin = user?.role === "admin";
+  // Screens where the paywall must not appear: plan/checkout, auth, and the
+  // post-onboarding trial screen (where the user opts into their free trial).
+  const onSubscription =
+    segments.includes("subscription" as never) ||
+    segments.includes("login" as never) ||
+    segments.includes("start-trial" as never);
+
+  // Don't gate users who are still in the signup / onboarding flow — they
+  // haven't reached the point of choosing a plan yet. The paywall only applies
+  // once onboarding is complete and they've entered the app.
   const blocked =
-    !!user && !isAdmin && !!status && status.needs_payment === true && !onSubscription;
+    !!user &&
+    !!user.onboarded &&
+    !isAdmin &&
+    !!status &&
+    status.needs_payment === true &&
+    !onSubscription;
+
+  // The user reaches this paywall either because their trial/plan expired, or
+  // because they never opted into a plan after onboarding. Adapt the copy so we
+  // don't tell someone their trial ended when they never started one.
+  const hadTrial = !!status?.history.some((h) => h.plan === "trial");
+  const hadAnyPlan = hadTrial || (status?.history.length ?? 0) > 0;
 
   return (
     <>
@@ -29,20 +50,29 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.title}>Trial Expired</Text>
+            <Text style={styles.title}>
+              {hadTrial ? "Trial Expired" : hadAnyPlan ? "Plan Expired" : "Unlock FitX"}
+            </Text>
             <Text style={styles.body}>
-              Your 7-day free trial has ended. Choose a plan to keep your AI workouts, diet plans,
-              meal scanner and coach unlocked.
+              {hadTrial
+                ? "Your 7-day free trial has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked."
+                : hadAnyPlan
+                ? "Your plan has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked."
+                : "Start your 7-day free trial or pick a plan to unlock your AI workouts, diet plans, meal scanner and coach."}
             </Text>
             <TouchableOpacity
               testID="paywall-cta"
               style={styles.cta}
               onPress={() => router.replace("/subscription" as any)}
             >
-              <Text style={styles.ctaText}>CHOOSE A PLAN</Text>
+              <Text style={styles.ctaText}>
+                {hadAnyPlan ? "CHOOSE A PLAN" : "GET STARTED"}
+              </Text>
             </TouchableOpacity>
             <Text style={styles.note}>
-              ₹1999 for 3 months · UPI or card · Instant unlock
+              {hadAnyPlan
+                ? "₹1999 for 3 months · UPI or card · Instant unlock"
+                : "7-day free trial · No charge · Cancel anytime"}
             </Text>
           </View>
         </View>

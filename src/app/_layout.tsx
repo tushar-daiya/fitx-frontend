@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
@@ -8,6 +8,8 @@ import QueryProvider from "@/src/provider/query";
 import { PaywallGuard } from "@/src/PaywallGuard";
 import { useAuthStore } from "@/src/store/auth";
 import { COLORS } from "@/src/theme";
+import { trackScreen, identifyUser, track } from "@/src/lib/analytics";
+import { storage } from "@/src/utils/storage";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -20,10 +22,36 @@ Notifications.setNotificationHandler({
 
 export default function RootLayout() {
   const refresh = useAuthStore((s) => s.refresh);
+  const userId = useAuthStore((s) => s.user?.id);
+  const pathname = usePathname();
 
   useEffect(() => {
     refresh();
   }, []);
+
+  // App-open + first-open (download) tracking. Firebase auto-logs `first_open`,
+  // but we also emit our own one-time `app_first_open` so it can be used in
+  // custom funnels/audiences, and `app_open` on every launch.
+  useEffect(() => {
+    (async () => {
+      track("app_open");
+      const seen = await storage.getItem<string>("fitx_first_open_logged", "");
+      if (!seen) {
+        track("app_first_open");
+        await storage.setItem("fitx_first_open_logged", "1");
+      }
+    })();
+  }, []);
+
+  // Automatic screen-view tracking on every route change.
+  useEffect(() => {
+    if (pathname) trackScreen(pathname === "/" ? "index" : pathname);
+  }, [pathname]);
+
+  // Tie all events to the logged-in user (cleared on logout).
+  useEffect(() => {
+    identifyUser(userId ? String(userId) : null);
+  }, [userId]);
 
   useEffect(() => {
     const response = Notifications.getLastNotificationResponse();

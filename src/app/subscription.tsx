@@ -17,6 +17,7 @@ import { useSubscriptionPlans, useSubscriptionStatus, useSubscribe } from "@/src
 import { useCreateOrder, useVerifyPayment } from "@/src/hooks/usePayments";
 import { useAuthStore } from "@/src/store/auth";
 import { apiFetch } from "@/src/lib/api";
+import { track } from "@/src/lib/analytics";
 import { COLORS, RADIUS, SPACING } from "@/src/theme";
 import type { PaymentOrder } from "@/src/types/api";
 
@@ -112,20 +113,36 @@ export default function Subscription() {
   const busy = createOrder.isPending || verifyPayment.isPending || subscribe.isPending;
 
   const startTrial = () => {
+    track("begin_checkout", { plan: "trial", is_trial: true });
     subscribe.mutate("trial", {
-      onSuccess: async () => {
+      onSuccess: async (res) => {
+        track("trial_started", { plan: "trial", value: 0, trial_ends: res?.ends });
         await refresh();
         router.replace("/(tabs)/home");
       },
-      onError: (e: any) => Alert.alert("Error", e.message),
+      onError: (e: any) => {
+        track("trial_failed", { plan: "trial", reason: e?.message });
+        Alert.alert("Error", e.message);
+      },
     });
   };
 
   const payWithWebView = () => {
     const currency = region === "in" ? "INR" : "USD";
+    const plan = plans.find((p) => p.id === selected);
+    const value = region === "in" ? plan?.price : USD_PRICES[selected];
+    track("begin_checkout", {
+      plan: selected,
+      currency,
+      value: value ?? 0,
+      is_trial: false,
+    });
     createOrder.mutate({ plan: selected, currency }, {
       onSuccess: (order) => setWebviewHtml(buildRazorpayHtml(order)),
-      onError: (e: any) => Alert.alert("Error", e.message),
+      onError: (e: any) => {
+        track("purchase_failed", { plan: selected, stage: "create_order", reason: e?.message });
+        Alert.alert("Error", e.message);
+      },
     });
   };
 
@@ -205,14 +222,24 @@ export default function Subscription() {
           </View>
         )}
 
-        {status && !status.active && status.active_plans.length === 0 && (
-          <View style={styles.noticeBanner}>
-            <Ionicons name="alert-circle" size={20} color="#EF4444" />
-            <Text style={styles.noticeText}>
-              Your subscription has expired. Choose a plan below to restore access.
-            </Text>
-          </View>
-        )}
+        {status &&
+          !status.active &&
+          status.active_plans.length === 0 &&
+          (status.history.length > 0 ? (
+            <View style={styles.noticeBanner}>
+              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Text style={styles.noticeText}>
+                Your subscription has expired. Choose a plan below to restore access.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.welcomeBanner}>
+              <Ionicons name="sparkles" size={20} color={COLORS.goldPremium} />
+              <Text style={styles.welcomeText}>
+                Start your 7-day free trial or pick a plan to unlock everything.
+              </Text>
+            </View>
+          ))}
 
         {status?.history && status.history.length > 0 && (
           <View style={styles.section}>
@@ -240,7 +267,10 @@ export default function Subscription() {
         <View style={styles.regionRow}>
           <TouchableOpacity
             testID="region-in"
-            onPress={() => setRegion("in")}
+            onPress={() => {
+              setRegion("in");
+              track("region_select", { region: "in" });
+            }}
             style={[styles.regionBtn, region === "in" && styles.regionBtnActive]}
           >
             <Text style={styles.regionFlag}>🇮🇳</Text>
@@ -250,7 +280,10 @@ export default function Subscription() {
           </TouchableOpacity>
           <TouchableOpacity
             testID="region-global"
-            onPress={() => setRegion("global")}
+            onPress={() => {
+              setRegion("global");
+              track("region_select", { region: "global" });
+            }}
             style={[styles.regionBtn, region === "global" && styles.regionBtnActive]}
           >
             <Text style={styles.regionFlag}>🌍</Text>
@@ -270,7 +303,15 @@ export default function Subscription() {
               key={p.id}
               testID={`plan-${p.id}`}
               activeOpacity={0.9}
-              onPress={() => setSelected(p.id)}
+              onPress={() => {
+                setSelected(p.id);
+                track("select_item", {
+                  item_id: p.id,
+                  is_trial: p.id === "trial",
+                  currency: region === "in" ? "INR" : "USD",
+                  value: region === "in" ? p.price : USD_PRICES[p.id] ?? 0,
+                });
+              }}
               style={[
                 styles.card,
                 isSel && styles.cardActive,
@@ -366,6 +407,18 @@ export default function Subscription() {
                     },
                     {
                       onSuccess: async (result) => {
+                        const plan = plans.find((p) => p.id === selected);
+                        const currency = region === "in" ? "INR" : "USD";
+                        const value =
+                          region === "in" ? plan?.price : USD_PRICES[selected];
+                        track("purchase", {
+                          transaction_id: msg.razorpay_payment_id,
+                          plan: selected,
+                          currency,
+                          value: value ?? 0,
+                          status: result.status,
+                          queued: result.status === "upcoming",
+                        });
                         await refresh();
                         refetchStatus();
                         const isQueued = result.status === "upcoming";
@@ -376,14 +429,24 @@ export default function Subscription() {
                             : "Your subscription is now active."
                         );
                       },
-                      onError: (e: any) =>
+                      onError: (e: any) => {
+                        track("purchase_failed", {
+                          plan: selected,
+                          stage: "verify",
+                          reason: e?.message,
+                        });
                         Alert.alert(
                           "Almost there",
                           e.message || "We couldn't confirm your payment just now. If you were charged, your access will unlock shortly."
-                        ),
+                        );
+                      },
                     }
                   );
                 } else {
+                  track("purchase_cancelled", {
+                    plan: selected,
+                    reason: msg.type,
+                  });
                   Alert.alert("Payment cancelled", (msg as any).description ?? "");
                 }
               }}
@@ -546,6 +609,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   noticeText: { color: "#fff", fontSize: 13, flex: 1, lineHeight: 18 },
+  welcomeBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#1a1505",
+    borderWidth: 1,
+    borderColor: COLORS.goldPremium,
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    marginBottom: 16,
+  },
+  welcomeText: { color: "#fff", fontSize: 13, flex: 1, lineHeight: 18 },
   subCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xl,

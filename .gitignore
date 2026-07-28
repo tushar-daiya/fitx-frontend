@@ -52,6 +52,5 @@ coverage/
 
 # Misc
 example
-*.plist
-google-services.json
 *.apk
+*.aab
