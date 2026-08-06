@@ -1,25 +1,30 @@
+import { useCreateOrder, useVerifyPayment } from "@/src/hooks/usePayments";
+import {
+  useSubscribe,
+  useSubscriptionPlans,
+  useSubscriptionStatus,
+} from "@/src/hooks/useSubscription";
+import { track } from "@/src/lib/analytics";
+import { apiFetch } from "@/src/lib/api";
+import { useAuthStore } from "@/src/store/auth";
+import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import type { PaymentOrder } from "@/src/types/api";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
   Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { AppEventsLogger } from "react-native-fbsdk-next";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
-import { useSubscriptionPlans, useSubscriptionStatus, useSubscribe } from "@/src/hooks/useSubscription";
-import { useCreateOrder, useVerifyPayment } from "@/src/hooks/usePayments";
-import { useAuthStore } from "@/src/store/auth";
-import { apiFetch } from "@/src/lib/api";
-import { track } from "@/src/lib/analytics";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
-import type { PaymentOrder } from "@/src/types/api";
 
 type Region = "in" | "global";
 
@@ -110,13 +115,18 @@ export default function Subscription() {
     ...(status?.upcoming_plans.map((s) => s.plan) ?? []),
   ]);
 
-  const busy = createOrder.isPending || verifyPayment.isPending || subscribe.isPending;
+  const busy =
+    createOrder.isPending || verifyPayment.isPending || subscribe.isPending;
 
   const startTrial = () => {
     track("begin_checkout", { plan: "trial", is_trial: true });
     subscribe.mutate("trial", {
       onSuccess: async (res) => {
-        track("trial_started", { plan: "trial", value: 0, trial_ends: res?.ends });
+        track("trial_started", {
+          plan: "trial",
+          value: 0,
+          trial_ends: res?.ends,
+        });
         await refresh();
         router.replace("/(tabs)/home");
       },
@@ -137,13 +147,20 @@ export default function Subscription() {
       value: value ?? 0,
       is_trial: false,
     });
-    createOrder.mutate({ plan: selected, currency }, {
-      onSuccess: (order) => setWebviewHtml(buildRazorpayHtml(order)),
-      onError: (e: any) => {
-        track("purchase_failed", { plan: selected, stage: "create_order", reason: e?.message });
-        Alert.alert("Error", e.message);
+    createOrder.mutate(
+      { plan: selected, currency },
+      {
+        onSuccess: (order) => setWebviewHtml(buildRazorpayHtml(order)),
+        onError: (e: any) => {
+          track("purchase_failed", {
+            plan: selected,
+            stage: "create_order",
+            reason: e?.message,
+          });
+          Alert.alert("Error", e.message);
+        },
       },
-    });
+    );
   };
 
   const activateNow = async (sub: SubEntry) => {
@@ -152,7 +169,10 @@ export default function Subscription() {
       await apiFetch(`/subscription/activate/${sub.id}`, { method: "POST" });
       await refresh();
       refetchStatus();
-      Alert.alert("Plan Activated", `Your ${planLabel(sub.plan, plans)} plan is now active.`);
+      Alert.alert(
+        "Plan Activated",
+        `Your ${planLabel(sub.plan, plans)} plan is now active.`,
+      );
     } catch (e: any) {
       Alert.alert("Error", e.message);
     } finally {
@@ -177,13 +197,20 @@ export default function Subscription() {
     const plan = plans.find((p) => p.id === selected);
     if (!plan) return "PROCEED TO PAY";
     const queued = queuedPlanIds.has(selected);
-    return queued ? `${plan.label.toUpperCase()} ALREADY QUEUED` : `PAY ${displayPrice(plan)}`;
+    return queued
+      ? `${plan.label.toUpperCase()} ALREADY QUEUED`
+      : `PAY ${displayPrice(plan)}`;
   };
 
-  const ctaDisabled = busy || !selected || (selected !== "trial" && queuedPlanIds.has(selected));
+  const ctaDisabled =
+    busy || !selected || (selected !== "trial" && queuedPlanIds.has(selected));
 
   return (
-    <SafeAreaView style={styles.container} testID="subscription-screen" edges={["top"]}>
+    <SafeAreaView
+      style={styles.container}
+      testID="subscription-screen"
+      edges={["top"]}
+    >
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={26} color="#fff" />
@@ -195,7 +222,8 @@ export default function Subscription() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Your Plans</Text>
         <Text style={styles.sub}>
-          7-day free trial. Premium features include AI plans, meal scanner & coach.
+          7-day free trial. Premium features include AI plans, meal scanner &
+          coach.
         </Text>
 
         {status?.active_plans && status.active_plans.length > 0 && (
@@ -229,7 +257,8 @@ export default function Subscription() {
             <View style={styles.noticeBanner}>
               <Ionicons name="alert-circle" size={20} color="#EF4444" />
               <Text style={styles.noticeText}>
-                Your subscription has expired. Choose a plan below to restore access.
+                Your subscription has expired. Choose a plan below to restore
+                access.
               </Text>
             </View>
           ) : (
@@ -271,10 +300,18 @@ export default function Subscription() {
               setRegion("in");
               track("region_select", { region: "in" });
             }}
-            style={[styles.regionBtn, region === "in" && styles.regionBtnActive]}
+            style={[
+              styles.regionBtn,
+              region === "in" && styles.regionBtnActive,
+            ]}
           >
             <Text style={styles.regionFlag}>🇮🇳</Text>
-            <Text style={[styles.regionText, region === "in" && styles.regionTextActive]}>
+            <Text
+              style={[
+                styles.regionText,
+                region === "in" && styles.regionTextActive,
+              ]}
+            >
               India · ₹
             </Text>
           </TouchableOpacity>
@@ -284,10 +321,18 @@ export default function Subscription() {
               setRegion("global");
               track("region_select", { region: "global" });
             }}
-            style={[styles.regionBtn, region === "global" && styles.regionBtnActive]}
+            style={[
+              styles.regionBtn,
+              region === "global" && styles.regionBtnActive,
+            ]}
           >
             <Text style={styles.regionFlag}>🌍</Text>
-            <Text style={[styles.regionText, region === "global" && styles.regionTextActive]}>
+            <Text
+              style={[
+                styles.regionText,
+                region === "global" && styles.regionTextActive,
+              ]}
+            >
               Global · $
             </Text>
           </TouchableOpacity>
@@ -296,7 +341,9 @@ export default function Subscription() {
         {plans.map((p) => {
           const isSel = selected === p.id;
           const isActive = status?.active_plans.some((s) => s.plan === p.id);
-          const isUpcoming = status?.upcoming_plans.some((s) => s.plan === p.id);
+          const isUpcoming = status?.upcoming_plans.some(
+            (s) => s.plan === p.id,
+          );
           const isQueued = isActive || isUpcoming;
           return (
             <TouchableOpacity
@@ -309,7 +356,7 @@ export default function Subscription() {
                   item_id: p.id,
                   is_trial: p.id === "trial",
                   currency: region === "in" ? "INR" : "USD",
-                  value: region === "in" ? p.price : USD_PRICES[p.id] ?? 0,
+                  value: region === "in" ? p.price : (USD_PRICES[p.id] ?? 0),
                 });
               }}
               style={[
@@ -341,12 +388,18 @@ export default function Subscription() {
                   </Text>
                 </View>
                 <View style={[styles.radio, isSel && styles.radioActive]}>
-                  {isSel && <Ionicons name="checkmark" size={16} color="#000" />}
+                  {isSel && (
+                    <Ionicons name="checkmark" size={16} color="#000" />
+                  )}
                 </View>
               </View>
               {p.perks.map((perk: string, i: number) => (
                 <View key={i} style={styles.perkRow}>
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.goldPremium} />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={16}
+                    color={COLORS.goldPremium}
+                  />
                   <Text style={styles.perkText}>{perk}</Text>
                 </View>
               ))}
@@ -356,13 +409,23 @@ export default function Subscription() {
 
         {plans.length > 0 && !plans.some((p) => p.id === "trial") && (
           <View style={styles.trialUsedCard}>
-            <Ionicons name="checkmark-circle" size={16} color={COLORS.textMuted} />
-            <Text style={styles.trialUsedText}>7-Day Free Trial — already used on this account</Text>
+            <Ionicons
+              name="checkmark-circle"
+              size={16}
+              color={COLORS.textMuted}
+            />
+            <Text style={styles.trialUsedText}>
+              7-Day Free Trial — already used on this account
+            </Text>
           </View>
         )}
 
         <View style={styles.trustRow}>
-          <Ionicons name="shield-checkmark" size={16} color={COLORS.goldPremium} />
+          <Ionicons
+            name="shield-checkmark"
+            size={16}
+            color={COLORS.goldPremium}
+          />
           <Text style={styles.trustText}>
             {region === "in"
               ? "UPI · Cards · Wallets · NetBanking · Secured by Razorpay"
@@ -390,7 +453,10 @@ export default function Subscription() {
 
       {webviewHtml && (
         <Modal visible animationType="slide">
-          <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }} edges={["top"]}>
+          <SafeAreaView
+            style={{ flex: 1, backgroundColor: "#000" }}
+            edges={["top"]}
+          >
             <WebView
               source={{ html: webviewHtml }}
               originWhitelist={["*"]}
@@ -419,6 +485,9 @@ export default function Subscription() {
                           status: result.status,
                           queued: result.status === "upcoming",
                         });
+                        AppEventsLogger.logPurchase(value ?? 0, currency, {
+                          fb_content_type: "subscription",
+                        });
                         await refresh();
                         refetchStatus();
                         const isQueued = result.status === "upcoming";
@@ -426,7 +495,7 @@ export default function Subscription() {
                           isQueued ? "Plan Queued" : "Welcome to FitX Premium",
                           isQueued
                             ? `Your ${selected.toUpperCase()} plan is scheduled to start on ${fmtDate(result.starts_at)} — right after your current plan ends.`
-                            : "Your subscription is now active."
+                            : "Your subscription is now active.",
                         );
                       },
                       onError: (e: any) => {
@@ -437,17 +506,21 @@ export default function Subscription() {
                         });
                         Alert.alert(
                           "Almost there",
-                          e.message || "We couldn't confirm your payment just now. If you were charged, your access will unlock shortly."
+                          e.message ||
+                            "We couldn't confirm your payment just now. If you were charged, your access will unlock shortly.",
                         );
                       },
-                    }
+                    },
                   );
                 } else {
                   track("purchase_cancelled", {
                     plan: selected,
                     reason: msg.type,
                   });
-                  Alert.alert("Payment cancelled", (msg as any).description ?? "");
+                  Alert.alert(
+                    "Payment cancelled",
+                    (msg as any).description ?? "",
+                  );
                 }
               }}
             />
@@ -488,11 +561,11 @@ function ActivePlanCard({ sub, plans }: { sub: SubEntry; plans: any[] }) {
                         Math.round(
                           (new Date(sub.ends_at).getTime() -
                             new Date(sub.starts_at).getTime()) /
-                            86400000
-                        )
+                            86400000,
+                        ),
                       )) *
-                    100
-                )
+                    100,
+                ),
               )}%` as any,
             },
           ]}
@@ -559,7 +632,9 @@ function HistoryCard({ sub, plans }: { sub: SubEntry; plans: any[] }) {
           </Text>
         </View>
         <View style={[styles.daysChip, styles.daysChipExpired]}>
-          <Text style={[styles.daysChipText, { color: COLORS.textMuted }]}>EXPIRED</Text>
+          <Text style={[styles.daysChipText, { color: COLORS.textMuted }]}>
+            EXPIRED
+          </Text>
         </View>
       </View>
     </View>
@@ -577,11 +652,32 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.s,
   },
   backBtn: { padding: 4 },
-  headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700", letterSpacing: 1 },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
-  title: { color: "#fff", fontSize: 30, fontWeight: "900", letterSpacing: -0.5 },
-  title2: { color: "#fff", fontSize: 22, fontWeight: "900", letterSpacing: -0.3, marginBottom: 12 },
-  sub: { color: COLORS.textSecondary, marginTop: 6, marginBottom: 16, lineHeight: 20 },
+  title: {
+    color: "#fff",
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+  },
+  title2: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+    marginBottom: 12,
+  },
+  sub: {
+    color: COLORS.textSecondary,
+    marginTop: 6,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
   section: { marginBottom: 8 },
   sectionTitle: {
     color: COLORS.textMuted,
@@ -661,7 +757,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 12,
   },
-  activateBtnText: { color: "#000", fontWeight: "900", fontSize: 12, letterSpacing: 1 },
+  activateBtnText: {
+    color: "#000",
+    fontWeight: "900",
+    fontSize: 12,
+    letterSpacing: 1,
+  },
   activateHint: {
     color: COLORS.textMuted,
     fontSize: 11,
@@ -687,7 +788,12 @@ const styles = StyleSheet.create({
   },
   regionBtnActive: { backgroundColor: COLORS.goldPremium },
   regionFlag: { fontSize: 16 },
-  regionText: { color: COLORS.textSecondary, fontWeight: "800", letterSpacing: 0.5, fontSize: 13 },
+  regionText: {
+    color: COLORS.textSecondary,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    fontSize: 13,
+  },
   regionTextActive: { color: "#000" },
   card: {
     backgroundColor: COLORS.surface,
@@ -711,10 +817,25 @@ const styles = StyleSheet.create({
   },
   badgeActive: { backgroundColor: COLORS.success },
   badgeUpcoming: { backgroundColor: "#7C6A1E" },
-  badgeText: { color: "#000", fontSize: 10, fontWeight: "900", letterSpacing: 1 },
+  badgeText: {
+    color: "#000",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
   cardHeader: { flexDirection: "row", alignItems: "center" },
-  planLabel: { color: "#fff", fontSize: 16, fontWeight: "700", letterSpacing: 0.5 },
-  price: { color: COLORS.goldPremium, fontSize: 32, fontWeight: "900", marginTop: 4 },
+  planLabel: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  price: {
+    color: COLORS.goldPremium,
+    fontSize: 32,
+    fontWeight: "900",
+    marginTop: 4,
+  },
   priceQueued: { color: COLORS.textMuted },
   radio: {
     width: 26,
@@ -725,7 +846,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  radioActive: { backgroundColor: COLORS.goldPremium, borderColor: COLORS.goldPremium },
+  radioActive: {
+    backgroundColor: COLORS.goldPremium,
+    borderColor: COLORS.goldPremium,
+  },
   perkRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
   perkText: { color: COLORS.textSecondary, fontSize: 14 },
   trialUsedCard: {
@@ -750,7 +874,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     marginTop: 8,
   },
-  trustText: { color: COLORS.textSecondary, fontSize: 11, flex: 1, lineHeight: 16 },
+  trustText: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    flex: 1,
+    lineHeight: 16,
+  },
   footer: {
     padding: SPACING.l,
     borderTopWidth: 1,
@@ -764,5 +893,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ctaDisabled: { opacity: 0.45 },
-  ctaText: { color: "#000", fontWeight: "900", letterSpacing: 1.5, fontSize: 15 },
+  ctaText: {
+    color: "#000",
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    fontSize: 15,
+  },
 });

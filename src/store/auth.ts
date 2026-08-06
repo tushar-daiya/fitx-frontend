@@ -1,10 +1,11 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { Platform } from "react-native";
+import { getAppInstanceId, identifyUser, track } from "@/src/lib/analytics";
+import { apiFetch, clearToken, setToken } from "@/src/lib/api";
+import type { AuthResponse, FitXUser } from "@/src/types/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiFetch, setToken, clearToken } from "@/src/lib/api";
-import { track, identifyUser, getAppInstanceId } from "@/src/lib/analytics";
-import type { FitXUser, AuthResponse } from "@/src/types/api";
+import { Platform } from "react-native";
+import { AppEventsLogger } from "react-native-fbsdk-next";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 // Send this device's Firebase app instance id to the backend so it can emit
 // server-side lifecycle events (e.g. trial_ended). Best-effort, never throws.
@@ -55,9 +56,8 @@ export const useAuthStore = create<AuthState>()(
           syncUserProps(u);
           if (wasNull && u) {
             syncAnalyticsId();
-            const { registerDevicePushToken } = await import(
-              "@/src/pushNotifications"
-            );
+            const { registerDevicePushToken } =
+              await import("@/src/pushNotifications");
             registerDevicePushToken().catch(() => {});
           }
         } catch {
@@ -77,9 +77,8 @@ export const useAuthStore = create<AuthState>()(
         track("login", { method: "email" });
         syncUserProps(r.user);
         syncAnalyticsId();
-        const { registerDevicePushToken } = await import(
-          "@/src/pushNotifications"
-        );
+        const { registerDevicePushToken } =
+          await import("@/src/pushNotifications");
         registerDevicePushToken().catch(() => {});
       },
 
@@ -92,6 +91,12 @@ export const useAuthStore = create<AuthState>()(
         await setToken(r.token);
         set({ user: r.user });
         track("sign_up", { method: "email" });
+        AppEventsLogger.logEvent(
+          AppEventsLogger.AppEvents.CompletedRegistration,
+          {
+            [AppEventsLogger.AppEventParams.RegistrationMethod]: "email",
+          },
+        );
         syncUserProps(r.user);
         syncAnalyticsId();
       },
@@ -107,6 +112,6 @@ export const useAuthStore = create<AuthState>()(
       name: "fitx-auth",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({ user: s.user }),
-    }
-  )
+    },
+  ),
 );

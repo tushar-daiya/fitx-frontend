@@ -58,6 +58,18 @@
       "@react-native-firebase/app",
       "@react-native-firebase/analytics",
       [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1538292474426570",
+          "clientToken": "6964b866151cda914a34b0c240f83600",
+          "displayName": "FitX",
+          "scheme": "fb1538292474426570",
+          "advertiserIDCollectionEnabled": true,
+          "autoLogAppEventsEnabled": true,
+          "isAutoInitEnabled": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

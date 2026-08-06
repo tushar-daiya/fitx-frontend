@@ -1,20 +1,20 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSubscribe } from "@/src/hooks/useSubscription";
+import { track } from "@/src/lib/analytics";
+import { useAuthStore } from "@/src/store/auth";
+import { COLORS, RADIUS, SPACING } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useSubscribe } from "@/src/hooks/useSubscription";
-import { useAuthStore } from "@/src/store/auth";
-import { track } from "@/src/lib/analytics";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { AppEventsLogger } from "react-native-fbsdk-next";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const PERKS = [
   "AI-personalised workout & diet plans",
@@ -32,7 +32,15 @@ export default function StartTrial() {
     track("begin_checkout", { plan: "trial", is_trial: true });
     subscribe.mutate("trial", {
       onSuccess: async (res) => {
-        track("trial_started", { plan: "trial", value: 0, trial_ends: res?.ends });
+        track("trial_started", {
+          plan: "trial",
+          value: 0,
+          trial_ends: res?.ends,
+        });
+        AppEventsLogger.logEvent(AppEventsLogger.AppEvents.StartTrial, {
+          fb_content_type: "subscription",
+          fb_description: "trial",
+        });
         await refresh();
         router.replace("/(tabs)/home");
       },
@@ -63,7 +71,11 @@ export default function StartTrial() {
         <View style={styles.perks}>
           {PERKS.map((perk) => (
             <View key={perk} style={styles.perkRow}>
-              <Ionicons name="checkmark-circle" size={20} color={COLORS.goldPremium} />
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color={COLORS.goldPremium}
+              />
               <Text style={styles.perkText}>{perk}</Text>
             </View>
           ))}
@@ -90,7 +102,11 @@ export default function StartTrial() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg, justifyContent: "space-between" },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    justifyContent: "space-between",
+  },
   content: {
     flex: 1,
     paddingHorizontal: SPACING.l,
@@ -123,6 +139,16 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: "center",
   },
-  ctaText: { color: "#000", fontWeight: "900", letterSpacing: 1.5, fontSize: 15 },
-  note: { color: COLORS.textMuted, fontSize: 12, textAlign: "center", marginTop: 14 },
+  ctaText: {
+    color: "#000",
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    fontSize: 15,
+  },
+  note: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 14,
+  },
 });
