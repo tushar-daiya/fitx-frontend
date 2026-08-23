@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitX - Your AI Health Companion",
     "slug": "fitx",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "fitx",
@@ -11,9 +11,9 @@
     "description": "AI personal trainer & nutritionist. Personalized workout + diet plans, meal scanner, fitness coach.",
     "ios": {
       "supportsTablet": true,
-      "version": "2.0.3",
+      "version": "2.0.4",
       "bundleIdentifier": "com.fitx.health.app",
-      "buildNumber": "8",
+      "buildNumber": "9",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "Scan meals to log calories instantly",
@@ -26,9 +26,9 @@
       "associatedDomains": []
     },
     "android": {
-      "version": "2.0.3",
+      "version": "2.0.4",
       "package": "com.fitx.health",
-      "versionCode": 18,
+      "versionCode": 19,
       "softwareKeyboardLayoutMode": "pan",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
