@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import { useSubscriptionStatus } from "@/src/hooks/useSubscription";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
+import { Logo } from "@/src/Logo";
 
 export function PaywallGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
@@ -45,11 +46,7 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
       <Modal visible={blocked} animationType="fade" transparent>
         <View style={styles.overlay}>
           <View style={styles.card}>
-            <Image
-              source={require("../assets/images/icon.png")}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+            <Logo size={104} style={styles.logo} />
             <Text style={styles.title}>
               {hadTrial ? "Trial Expired" : hadAnyPlan ? "Plan Expired" : "Unlock FitX"}
             </Text>
@@ -99,10 +96,11 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: "center",
   },
-  logo: { width: 80, height: 80, marginBottom: 16 },
-  title: { color: COLORS.goldPremium, fontSize: 26, fontWeight: "900", letterSpacing: 0.5 },
+  logo: { marginBottom: 16 },
+  title: { color: COLORS.goldPremium, fontFamily: FONTS.headingBold, fontSize: 30, letterSpacing: 0.5 },
   body: {
     color: COLORS.textSecondary,
+    fontFamily: FONTS.body,
     textAlign: "center",
     marginTop: 12,
     marginBottom: 22,
@@ -117,6 +115,6 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
-  ctaText: { color: "#000", fontWeight: "900", letterSpacing: 1.5, fontSize: 14 },
-  note: { color: COLORS.textMuted, fontSize: 12, marginTop: 14, textAlign: "center" },
+  ctaText: { color: COLORS.onAccent, fontFamily: FONTS.bodyBold, letterSpacing: 1.5, fontSize: 14 },
+  note: { color: COLORS.textMuted, fontFamily: FONTS.body, fontSize: 12, marginTop: 14, textAlign: "center" },
 });

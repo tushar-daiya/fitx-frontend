@@ -1,13 +1,13 @@
 import { useSubscribe } from "@/src/hooks/useSubscription";
 import { track } from "@/src/lib/analytics";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
+import { Logo } from "@/src/Logo";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -56,11 +56,7 @@ export default function StartTrial() {
   return (
     <SafeAreaView style={styles.container} testID="start-trial-screen">
       <View style={styles.content}>
-        <Image
-          source={require("../../assets/images/icon.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Logo size={112} style={styles.logo} />
         <Text style={styles.title}>
           {firstName ? `You're all set, ${firstName}!` : "You're all set!"}
         </Text>
@@ -90,7 +86,7 @@ export default function StartTrial() {
           disabled={subscribe.isPending}
         >
           {subscribe.isPending ? (
-            <ActivityIndicator color="#000" />
+            <ActivityIndicator color={COLORS.onAccent} />
           ) : (
             <Text style={styles.ctaText}>START 7-DAY FREE TRIAL</Text>
           )}
@@ -113,16 +109,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  logo: { width: 96, height: 96, marginBottom: 20 },
+  logo: { marginBottom: 20 },
   title: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "900",
+    color: COLORS.textPrimary,
+    fontFamily: FONTS.headingBold,
+    fontSize: 34,
     letterSpacing: -0.5,
     textAlign: "center",
   },
   sub: {
     color: COLORS.textSecondary,
+    fontFamily: FONTS.body,
     fontSize: 15,
     textAlign: "center",
     marginTop: 10,
@@ -131,7 +128,7 @@ const styles = StyleSheet.create({
   },
   perks: { alignSelf: "stretch", gap: 14 },
   perkRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  perkText: { color: "#fff", fontSize: 15, flex: 1 },
+  perkText: { color: COLORS.textPrimary, fontFamily: FONTS.body, fontSize: 15, flex: 1 },
   footer: { padding: SPACING.l },
   cta: {
     backgroundColor: COLORS.goldPremium,
@@ -140,8 +137,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ctaText: {
-    color: "#000",
-    fontWeight: "900",
+    color: COLORS.onAccent,
+    fontFamily: FONTS.bodyBold,
     letterSpacing: 1.5,
     fontSize: 15,
   },

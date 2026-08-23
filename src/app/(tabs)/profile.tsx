@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function Profile() {
   const { user, logout } = useAuthStore();
@@ -169,9 +169,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
   },
-  avatarText: { color: "#000", fontSize: 38, fontWeight: "900" },
-  name: { color: "#fff", fontSize: 22, fontWeight: "800", marginTop: 12 },
-  email: { color: COLORS.textSecondary, marginTop: 2 },
+  avatarText: { color: COLORS.onAccent, fontSize: 38, fontWeight: "900", fontFamily: FONTS.headingBold },
+  name: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", marginTop: 12, fontFamily: FONTS.headingBold },
+  email: { color: COLORS.textSecondary, marginTop: 2, fontFamily: FONTS.body },
   trialCard: {
     width: "100%",
     backgroundColor: COLORS.surface,
@@ -182,8 +182,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderAccent,
     alignItems: "center",
   },
-  trialLabel: { color: COLORS.goldMuted, letterSpacing: 1.5, fontSize: 11, fontWeight: "700" },
-  trialValue: { color: COLORS.goldPremium, fontSize: 22, fontWeight: "800", marginTop: 6 },
+  trialLabel: { color: COLORS.goldMuted, letterSpacing: 1.5, fontSize: 11, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  trialValue: { color: COLORS.goldPremium, fontSize: 22, fontWeight: "800", marginTop: 6, fontFamily: FONTS.headingBold },
   profileCard: {
     width: "100%",
     backgroundColor: COLORS.surface,
@@ -193,10 +193,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     marginTop: 16,
   },
-  sectionLabel: { color: COLORS.goldMuted, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", marginBottom: 10 },
+  sectionLabel: { color: COLORS.goldMuted, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", marginBottom: 10, fontFamily: FONTS.bodyBold },
   row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 },
-  rowLabel: { color: COLORS.textSecondary, fontSize: 14 },
-  rowValue: { color: "#fff", fontSize: 14, fontWeight: "700", textTransform: "capitalize" },
+  rowLabel: { color: COLORS.textSecondary, fontSize: 14, fontFamily: FONTS.body },
+  rowValue: { color: COLORS.textPrimary, fontSize: 14, fontWeight: "700", textTransform: "capitalize", fontFamily: FONTS.bodyBold },
   menu: { width: "100%", marginTop: 16 },
   menuItem: {
     flexDirection: "row",
@@ -209,6 +209,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  menuLabel: { color: "#fff", fontSize: 15, fontWeight: "600", flex: 1 },
-  foot: { color: COLORS.textMuted, fontSize: 11, marginTop: 28, letterSpacing: 1 },
+  menuLabel: { color: COLORS.textPrimary, fontSize: 15, fontWeight: "600", flex: 1, fontFamily: FONTS.bodyMedium },
+  foot: { color: COLORS.textMuted, fontSize: 11, marginTop: 28, letterSpacing: 1, fontFamily: FONTS.body },
 });

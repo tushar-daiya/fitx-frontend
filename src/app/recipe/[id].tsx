@@ -12,7 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRecipe } from "@/src/hooks/useRecipes";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,7 +50,7 @@ export default function RecipeDetail() {
             style={[styles.backBtn, { top: insets.top + 12 }]}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={26} color="#fff" />
+            <Ionicons name="chevron-back" size={26} color={COLORS.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -115,7 +115,7 @@ function Macro({ label, value }: { label: string; value: any }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: COLORS.bg },
-  error: { color: "#EF4444", padding: 32, textAlign: "center" },
+  error: { color: COLORS.error, padding: 32, textAlign: "center", fontFamily: FONTS.body },
   heroWrap: { position: "relative" },
   hero: { width: "100%", height: 320, backgroundColor: COLORS.surface2 },
   heroOverlay: {
@@ -137,7 +137,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   body: { padding: SPACING.l },
-  title: { color: "#fff", fontSize: 28, fontWeight: "900", letterSpacing: -0.5 },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    fontFamily: FONTS.headingBold,
+  },
   metaRow: { flexDirection: "row", gap: 8, marginTop: 8, marginBottom: 16 },
   metaTag: {
     backgroundColor: COLORS.surfaceElevated,
@@ -148,6 +154,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: RADIUS.pill,
+    fontFamily: FONTS.bodyBold,
   },
   macroBar: {
     flexDirection: "row",
@@ -157,8 +164,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  mLabel: { color: COLORS.textMuted, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
-  mValue: { color: "#fff", fontSize: 18, fontWeight: "900", marginTop: 4 },
+  mLabel: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1,
+    fontFamily: FONTS.bodyBold,
+  },
+  mValue: {
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 4,
+    fontFamily: FONTS.headingBold,
+  },
   section: { marginTop: 28 },
   sectionTitle: {
     color: COLORS.goldPremium,
@@ -166,10 +185,11 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 2,
     marginBottom: 12,
+    fontFamily: FONTS.bodyBold,
   },
   bulletRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10, gap: 12 },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.goldPremium, marginTop: 8 },
-  bulletText: { color: "#fff", fontSize: 15, flex: 1, lineHeight: 22 },
+  bulletText: { color: COLORS.textPrimary, fontSize: 15, flex: 1, lineHeight: 22, fontFamily: FONTS.body },
   stepRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 14, gap: 12 },
   stepNum: {
     width: 28,
@@ -179,7 +199,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  stepNumText: { color: "#000", fontWeight: "900" },
-  stepText: { color: "#fff", fontSize: 15, flex: 1, lineHeight: 22 },
-  muted: { color: COLORS.textMuted, fontStyle: "italic" },
+  stepNumText: { color: COLORS.onAccent, fontWeight: "900", fontFamily: FONTS.bodyBold },
+  stepText: { color: COLORS.textPrimary, fontSize: 15, flex: 1, lineHeight: 22, fontFamily: FONTS.body },
+  muted: { color: COLORS.textMuted, fontStyle: "italic", fontFamily: FONTS.body },
 });

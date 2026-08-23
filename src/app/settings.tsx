@@ -18,7 +18,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
 import { useI18nStore } from "@/src/store/i18n";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 
 const GOALS = ["fat_loss", "lean_bulk", "body_recomp"];
 const LEVELS = ["beginner", "intermediate", "advanced"];
@@ -278,7 +278,7 @@ export default function Settings() {
               disabled={updateProfile.isPending}
             >
               {updateProfile.isPending ? (
-                <ActivityIndicator color="#000" />
+                <ActivityIndicator color={COLORS.onAccent} />
               ) : (
                 <Text style={styles.ctaText}>SAVE CHANGES</Text>
               )}
@@ -328,13 +328,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", fontFamily: FONTS.headingBold },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
   section: {
     color: COLORS.goldMuted,
     fontSize: 11,
     letterSpacing: 1.5,
     fontWeight: "700",
+    fontFamily: FONTS.bodyBold,
     marginTop: 16,
     marginBottom: 10,
   },
@@ -348,10 +349,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   chipActive: { backgroundColor: COLORS.goldPremium, borderColor: COLORS.goldPremium },
-  chipText: { color: "#fff", fontWeight: "700", textTransform: "capitalize", fontSize: 13 },
-  chipTextActive: { color: "#000" },
+  chipText: { color: COLORS.textPrimary, fontWeight: "700", fontFamily: FONTS.bodyBold, textTransform: "capitalize", fontSize: 13 },
+  chipTextActive: { color: COLORS.onAccent },
   fieldWrap: { marginBottom: 12 },
-  fieldLabel: { color: COLORS.textSecondary, fontSize: 12, marginBottom: 6 },
+  fieldLabel: { color: COLORS.textSecondary, fontSize: 12, marginBottom: 6, fontFamily: FONTS.body },
   field: {
     backgroundColor: COLORS.surfaceElevated,
     borderRadius: RADIUS.lg,
@@ -359,12 +360,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: "700",
+    fontFamily: FONTS.bodyBold,
   },
-  fieldError: { borderColor: "#EF4444" },
-  errText: { color: "#EF4444", fontSize: 12, marginTop: 4, fontWeight: "600" },
+  fieldError: { borderColor: COLORS.error },
+  errText: { color: COLORS.error, fontSize: 12, marginTop: 4, fontWeight: "600", fontFamily: FONTS.bodyMedium },
   linkCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.lg,
@@ -376,14 +378,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
   },
-  linkLabel: { color: "#fff", fontSize: 15, fontWeight: "700" },
-  linkSub: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  linkLabel: { color: COLORS.textPrimary, fontSize: 15, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  linkSub: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2, fontFamily: FONTS.body },
   versionText: {
     color: COLORS.textMuted,
     fontSize: 11,
     textAlign: "center",
     marginTop: 24,
     letterSpacing: 1.5,
+    fontFamily: FONTS.body,
   },
   footer: { padding: SPACING.l, borderTopWidth: 1, borderTopColor: COLORS.border },
   cta: {
@@ -392,5 +395,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
   },
-  ctaText: { color: "#000", fontWeight: "900", letterSpacing: 1.5 },
+  ctaText: { color: COLORS.onAccent, fontWeight: "900", fontFamily: FONTS.bodyBold, letterSpacing: 1.5 },
 });

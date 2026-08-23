@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAdminStats, useAdminUsers, useSendNotification } from "@/src/hooks/useAdmin";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function Admin() {
   const router = useRouter();
@@ -77,7 +77,7 @@ export default function Admin() {
             style={[styles.input, styles.textArea]}
           />
           <TouchableOpacity style={styles.sendBtn} onPress={sendNotification} disabled={sendNotif.isPending}>
-            {sendNotif.isPending ? <ActivityIndicator color="#000" /> : <Text style={styles.sendBtnText}>SEND</Text>}
+            {sendNotif.isPending ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.sendBtnText}>SEND</Text>}
           </TouchableOpacity>
         </View>
 
@@ -123,7 +123,7 @@ export default function Admin() {
           style={styles.addBtn}
           onPress={() => router.push("/admin-recipe" as any)}
         >
-          <Ionicons name="add-circle" size={22} color="#000" />
+          <Ionicons name="add-circle" size={22} color={COLORS.onAccent} />
           <Text style={styles.addBtnText}>ADD RECIPE</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", fontFamily: FONTS.headingBold },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16, marginTop: 16 },
   statCard: {
@@ -161,8 +161,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     alignItems: "center",
   },
-  statValue: { color: COLORS.goldPremium, fontSize: 24, fontWeight: "900" },
-  statLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700", marginTop: 4 },
+  statValue: { color: COLORS.goldPremium, fontSize: 24, fontWeight: "900", fontFamily: FONTS.headingBold },
+  statLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700", marginTop: 4, fontFamily: FONTS.bodyBold },
   section: {
     color: COLORS.goldMuted,
     fontSize: 11,
@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 16,
     marginBottom: 8,
+    fontFamily: FONTS.bodyBold,
   },
   card: {
     backgroundColor: COLORS.surface,
@@ -186,19 +187,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  rowText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  rowSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
-  rowMeta: { color: COLORS.goldPremium, fontSize: 12, fontWeight: "700", textTransform: "uppercase" },
-  empty: { color: COLORS.textMuted, textAlign: "center", padding: 16 },
+  rowText: { color: COLORS.textPrimary, fontSize: 14, fontWeight: "600", fontFamily: FONTS.bodyMedium },
+  rowSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2, fontFamily: FONTS.body },
+  rowMeta: { color: COLORS.goldPremium, fontSize: 12, fontWeight: "700", textTransform: "uppercase", fontFamily: FONTS.bodyBold },
+  empty: { color: COLORS.textMuted, textAlign: "center", padding: 16, fontFamily: FONTS.body },
   input: {
     backgroundColor: COLORS.bg,
     borderColor: COLORS.border,
     borderWidth: 1,
     borderRadius: RADIUS.lg,
-    color: "#fff",
+    color: COLORS.textPrimary,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 12,
+    fontFamily: FONTS.body,
   },
   textArea: { minHeight: 100, textAlignVertical: "top" },
   sendBtn: {
@@ -207,7 +209,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
-  sendBtnText: { color: "#000", fontWeight: "900", letterSpacing: 1.5 },
+  sendBtnText: { color: COLORS.onAccent, fontWeight: "900", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
   addBtn: {
     flexDirection: "row",
     backgroundColor: COLORS.goldPremium,
@@ -218,5 +220,5 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 24,
   },
-  addBtnText: { color: "#000", fontWeight: "900", letterSpacing: 1.5 },
+  addBtnText: { color: COLORS.onAccent, fontWeight: "900", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
 });

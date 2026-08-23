@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useScanMeal, useLogMeal } from "@/src/hooks/useMeals";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import type { ScanResult } from "@/src/types/api";
 
 export default function Scan() {
@@ -124,7 +124,7 @@ export default function Scan() {
             disabled={scanMeal.isPending}
           >
             {scanMeal.isPending ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color={COLORS.onAccent} />
             ) : (
               <Text style={styles.primaryText}>ANALYZE WITH AI</Text>
             )}
@@ -149,7 +149,7 @@ export default function Scan() {
               disabled={logMeal.isPending}
             >
               {logMeal.isPending ? (
-                <ActivityIndicator color="#000" />
+                <ActivityIndicator color={COLORS.onAccent} />
               ) : (
                 <Text style={styles.primaryText}>LOG THIS MEAL</Text>
               )}
@@ -173,8 +173,8 @@ function Mac({ label, value }: { label: string; value: any }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
-  title: { color: "#fff", fontSize: 28, fontWeight: "800" },
-  sub: { color: COLORS.textSecondary, marginTop: 4, marginBottom: 16 },
+  title: { color: COLORS.textPrimary, fontSize: 28, fontWeight: "800", fontFamily: FONTS.headingBold },
+  sub: { color: COLORS.textSecondary, marginTop: 4, marginBottom: 16, fontFamily: FONTS.body },
   preview: {
     aspectRatio: 1,
     borderRadius: RADIUS.xxl,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   image: { width: "100%", height: "100%" },
   placeholder: { flex: 1, alignItems: "center", justifyContent: "center" },
-  placeholderText: { color: COLORS.textMuted, marginTop: 12 },
+  placeholderText: { color: COLORS.textMuted, marginTop: 12, fontFamily: FONTS.body },
   row: { flexDirection: "row", gap: 12, marginTop: 16 },
   actionBtnAlt: {
     flex: 1,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  actionBtnAltText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1 },
+  actionBtnAltText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
   primary: {
     backgroundColor: COLORS.goldPremium,
     paddingVertical: 16,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 16,
   },
-  primaryText: { color: "#000", fontWeight: "800", letterSpacing: 1.5 },
+  primaryText: { color: COLORS.onAccent, fontWeight: "800", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
   resultCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xxl,
@@ -215,8 +215,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderAccent,
   },
-  resultName: { color: "#fff", fontSize: 22, fontWeight: "800", textTransform:"capitalize" },
-  resultPortion: { color: COLORS.goldMuted, fontSize: 13, letterSpacing: 1, marginTop: 4 },
+  resultName: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", textTransform:"capitalize", fontFamily: FONTS.headingBold },
+  resultPortion: { color: COLORS.goldMuted, fontSize: 13, letterSpacing: 1, marginTop: 4, fontFamily: FONTS.body },
   macroGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 16, gap: 8 },
   macItem: {
     flex: 1,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     alignItems: "center",
   },
-  macLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700" },
-  macValue: { color: COLORS.goldPremium, fontSize: 18, fontWeight: "800", marginTop: 4 },
-  notes: { color: COLORS.textSecondary, marginTop: 12, lineHeight: 20 },
+  macLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  macValue: { color: COLORS.goldPremium, fontSize: 18, fontWeight: "800", marginTop: 4, fontFamily: FONTS.headingBold },
+  notes: { color: COLORS.textSecondary, marginTop: 12, lineHeight: 20, fontFamily: FONTS.body },
 });

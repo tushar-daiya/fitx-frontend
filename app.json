@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "FitX",
+    "name": "FitX - Your AI Health Companion",
     "slug": "fitx",
     "version": "2.0.3",
     "orientation": "portrait",
@@ -33,7 +33,7 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#0D0D0D"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -89,7 +89,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#000000",
+          "backgroundColor": "#0D0D0D",
           "imageWidth": 200
         }
       ],

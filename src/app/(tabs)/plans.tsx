@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCurrentPlan, useGeneratePlan } from "@/src/hooks/usePlans";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function Plans() {
   const router = useRouter();
@@ -83,7 +83,7 @@ export default function Plans() {
             onPress={() => router.push("/workouts" as any)}
           >
             <View style={styles.videoIconBox}>
-              <Ionicons name="play-circle" size={32} color="#000" />
+              <Ionicons name="play-circle" size={32} color={COLORS.onAccent} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.videoTitle}>Workout Videos</Text>
@@ -171,13 +171,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.l,
     paddingTop: SPACING.m,
   },
-  title: { color: "#fff", fontSize: 28, fontWeight: "800" },
-  regen: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1 },
+  title: { color: COLORS.textPrimary, fontSize: 28, fontWeight: "800", fontFamily: FONTS.headingBold },
+  regen: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
   loading: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  loadingText: { color: COLORS.textSecondary, marginTop: 16, fontSize: 14 },
+  loadingText: { color: COLORS.textSecondary, marginTop: 16, fontSize: 14, fontFamily: FONTS.body },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  emptyTitle: { color: "#fff", fontSize: 24, fontWeight: "800" },
-  emptySub: { color: COLORS.textSecondary, marginTop: 8, textAlign: "center" },
+  emptyTitle: { color: COLORS.textPrimary, fontSize: 24, fontWeight: "800", fontFamily: FONTS.headingBold },
+  emptySub: { color: COLORS.textSecondary, marginTop: 8, textAlign: "center", fontFamily: FONTS.body },
   primaryBtn: {
     backgroundColor: COLORS.goldPremium,
     borderRadius: RADIUS.pill,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 36,
     marginTop: 24,
   },
-  primaryBtnText: { color: "#000", fontWeight: "800", letterSpacing: 1.5 },
+  primaryBtnText: { color: COLORS.onAccent, fontWeight: "800", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
   secondaryLink: {
     flexDirection: "row",
     alignItems: "center",
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     paddingVertical: 8,
   },
-  secondaryLinkText: { color: COLORS.goldPremium, fontWeight: "700", letterSpacing: 0.5 },
+  secondaryLinkText: { color: COLORS.goldPremium, fontWeight: "700", letterSpacing: 0.5, fontFamily: FONTS.bodyBold },
   scroll: { padding: SPACING.l },
   summaryCard: {
     backgroundColor: COLORS.surfaceElevated,
@@ -203,10 +203,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderAccent,
     marginBottom: 16,
   },
-  summaryText: { color: COLORS.goldPremium, fontSize: 16, fontWeight: "600", fontStyle: "italic" },
+  summaryText: { color: COLORS.goldPremium, fontSize: 16, fontWeight: "600", fontStyle: "italic", fontFamily: FONTS.bodyMedium },
   macroBar: { flexDirection: "row", marginTop: 16 },
-  sLabel: { color: COLORS.textMuted, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
-  sValue: { color: "#fff", fontSize: 18, fontWeight: "800", marginTop: 2 },
+  sLabel: { color: COLORS.textMuted, fontSize: 11, fontWeight: "700", letterSpacing: 1, fontFamily: FONTS.bodyBold },
+  sValue: { color: COLORS.textPrimary, fontSize: 18, fontWeight: "800", marginTop: 2, fontFamily: FONTS.headingBold },
   tabBar: {
     flexDirection: "row",
     backgroundColor: COLORS.surface,
@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: RADIUS.pill },
   tabActive: { backgroundColor: COLORS.goldPremium },
-  tabText: { color: COLORS.textSecondary, fontWeight: "800", letterSpacing: 1.5 },
-  tabTextActive: { color: "#000" },
+  tabText: { color: COLORS.textSecondary, fontWeight: "800", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
+  tabTextActive: { color: COLORS.onAccent },
   dayCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xl,
@@ -227,12 +227,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dayHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  dayName: { color: "#fff", fontWeight: "800", fontSize: 18 },
-  dayType: { color: COLORS.goldPremium, fontSize: 11, fontWeight: "700", letterSpacing: 1.5 },
-  dayFocus: { color: COLORS.textSecondary, marginTop: 6, marginBottom: 10 },
+  dayName: { color: COLORS.textPrimary, fontWeight: "800", fontSize: 18, fontFamily: FONTS.headingBold },
+  dayType: { color: COLORS.goldPremium, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
+  dayFocus: { color: COLORS.textSecondary, marginTop: 6, marginBottom: 10, fontFamily: FONTS.body },
   exerciseRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
-  exName: { color: "#fff" },
-  exMeta: { color: COLORS.goldMuted, fontWeight: "700" },
+  exName: { color: COLORS.textPrimary, fontFamily: FONTS.body },
+  exMeta: { color: COLORS.goldMuted, fontWeight: "700", fontFamily: FONTS.bodyBold },
   videoCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -252,6 +252,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  videoTitle: { color: "#fff", fontSize: 16, fontWeight: "800" },
-  videoSub: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  videoTitle: { color: COLORS.textPrimary, fontSize: 16, fontWeight: "800", fontFamily: FONTS.headingBold },
+  videoSub: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2, fontFamily: FONTS.body },
 });

@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRecipes } from "@/src/hooks/useRecipes";
 import type { DietType } from "@/src/types/api";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 const FILTERS = ["all", "veg", "non_veg", "eggetarian", "vegan", "jain"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -145,7 +145,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "900" },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: 22,
+    fontWeight: "900",
+    fontFamily: FONTS.headingBold,
+  },
 
   // Filters
   filtersScroll: { flexGrow: 0, flexShrink: 0 },
@@ -172,15 +177,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3,
+    fontFamily: FONTS.bodyMedium,
   },
-  filterTextActive: { color: "#000", fontWeight: "800" },
+  filterTextActive: { color: COLORS.onAccent, fontWeight: "800", fontFamily: FONTS.bodyBold },
 
   // Loading / empty
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  loadingText: { color: COLORS.textSecondary, marginTop: 14, fontSize: 14 },
+  loadingText: {
+    color: COLORS.textSecondary,
+    marginTop: 14,
+    fontSize: 14,
+    fontFamily: FONTS.body,
+  },
   emptyWrap: { alignItems: "center", paddingTop: 60, paddingBottom: 20 },
-  emptyTitle: { color: "#fff", fontSize: 18, fontWeight: "800", marginTop: 14 },
-  emptyText: { color: COLORS.textSecondary, marginTop: 6 },
+  emptyTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 14,
+    fontFamily: FONTS.headingSemiBold,
+  },
+  emptyText: { color: COLORS.textSecondary, marginTop: 6, fontFamily: FONTS.body },
 
   // List
   list: { paddingHorizontal: SPACING.l, paddingBottom: 40, gap: 16 },
@@ -225,8 +242,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.8,
     textTransform: "uppercase",
+    fontFamily: FONTS.bodyBold,
   },
-  cardTitle: { color: "#fff", fontSize: 17, fontWeight: "800", lineHeight: 22 },
+  cardTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 17,
+    fontWeight: "800",
+    lineHeight: 22,
+    fontFamily: FONTS.headingSemiBold,
+  },
   macroRow: { flexDirection: "row", gap: 6, marginTop: 4, flexWrap: "wrap" },
   macroTag: {
     backgroundColor: COLORS.bg,
@@ -237,6 +261,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  macroLabel: { color: COLORS.textMuted, fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
-  macroValue: { color: COLORS.goldPremium, fontSize: 13, fontWeight: "800", marginTop: 1 },
+  macroLabel: {
+    color: COLORS.textMuted,
+    fontSize: 9,
+    letterSpacing: 0.5,
+    fontFamily: FONTS.bodyBold,
+  },
+  macroValue: {
+    color: COLORS.goldPremium,
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 1,
+    fontFamily: FONTS.bodyBold,
+  },
 });

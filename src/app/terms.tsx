@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { COLORS, SPACING } from "@/src/theme";
+import { COLORS, SPACING, FONTS } from "@/src/theme";
 
 export default function Terms() {
   const router = useRouter();
@@ -89,11 +89,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 20, fontWeight: "800", letterSpacing: 0.5 },
+  title: { color: COLORS.textPrimary, fontSize: 20, fontWeight: "800", fontFamily: FONTS.headingBold, letterSpacing: 0.5 },
   scroll: { padding: SPACING.l, paddingBottom: 60 },
-  updated: { color: COLORS.textMuted, fontSize: 12, marginBottom: 24, letterSpacing: 0.5 },
+  updated: { color: COLORS.textMuted, fontSize: 12, marginBottom: 24, letterSpacing: 0.5, fontFamily: FONTS.body },
   section: { marginBottom: 24 },
-  heading: { color: COLORS.goldPremium, fontSize: 16, fontWeight: "800", marginBottom: 8, letterSpacing: 0.3 },
-  body: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 22 },
-  footer: { color: COLORS.textMuted, fontSize: 11, textAlign: "center", marginTop: 20, letterSpacing: 0.5 },
+  heading: { color: COLORS.goldPremium, fontSize: 16, fontWeight: "800", fontFamily: FONTS.headingSemiBold, marginBottom: 8, letterSpacing: 0.3 },
+  body: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 22, fontFamily: FONTS.body },
+  footer: { color: COLORS.textMuted, fontSize: 11, textAlign: "center", marginTop: 20, letterSpacing: 0.5, fontFamily: FONTS.body },
 });

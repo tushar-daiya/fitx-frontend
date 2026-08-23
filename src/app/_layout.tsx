@@ -1,9 +1,21 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
+import * as SplashScreen from "expo-splash-screen";
 import { router } from "expo-router";
+import { useFonts } from "expo-font";
+import {
+  BarlowCondensed_500Medium,
+  BarlowCondensed_600SemiBold,
+  BarlowCondensed_700Bold,
+} from "@expo-google-fonts/barlow-condensed";
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_700Bold,
+} from "@expo-google-fonts/dm-sans";
 import QueryProvider from "@/src/provider/query";
 import { PaywallGuard } from "@/src/PaywallGuard";
 import { useAuthStore } from "@/src/store/auth";
@@ -20,10 +32,31 @@ Notifications.setNotificationHandler({
   }),
 });
 
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
   const refresh = useAuthStore((s) => s.refresh);
   const userId = useAuthStore((s) => s.user?.id);
   const pathname = usePathname();
+
+  const [fontsLoaded, fontError] = useFonts({
+    BarlowCondensed_500Medium,
+    BarlowCondensed_600SemiBold,
+    BarlowCondensed_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_700Bold,
+  });
+
+  const onLayoutReady = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    onLayoutReady();
+  }, [onLayoutReady]);
 
   useEffect(() => {
     refresh();
@@ -59,6 +92,8 @@ export default function RootLayout() {
     const sub = Notifications.addNotificationResponseReceivedListener(() => router.replace("/"));
     return () => sub.remove();
   }, []);
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <SafeAreaProvider>

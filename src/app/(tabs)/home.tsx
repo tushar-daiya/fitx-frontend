@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/src/store/auth";
 import { Avatar } from "@/src/Avatar";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import { useMealsToday } from "@/src/hooks/useMeals";
 import { useDailyToday, useLogWater, useLogSteps } from "@/src/hooks/useDaily";
 import { useCurrentPlan } from "@/src/hooks/usePlans";
@@ -138,7 +138,7 @@ export default function Home() {
             style={styles.actionBtn}
             onPress={() => router.push("/(tabs)/scan" as any)}
           >
-            <Ionicons name="camera" size={20} color="#000" />
+            <Ionicons name="camera" size={20} color={COLORS.onAccent} />
             <Text style={styles.actionBtnText}>SCAN MEAL</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -184,8 +184,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 },
-  hi: { color: COLORS.textSecondary, fontSize: 14 },
-  name: { color: "#fff", fontSize: 26, fontWeight: "800" },
+  hi: { color: COLORS.textSecondary, fontSize: 14, fontFamily: FONTS.body },
+  name: { color: COLORS.textPrimary, fontSize: 26, fontWeight: "800", fontFamily: FONTS.headingBold },
   brandPill: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.goldPremium,
   },
-  brandText: { color: COLORS.goldPremium, fontWeight: "900", letterSpacing: 2 },
+  brandText: { color: COLORS.goldPremium, fontWeight: "900", letterSpacing: 2, fontFamily: FONTS.headingBold },
   heroCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xxl,
@@ -204,12 +204,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  heroLabel: { color: COLORS.goldMuted, fontSize: 10, letterSpacing: 1.5, fontWeight: "700" },
-  heroValue: { color: COLORS.goldPremium, fontSize: 42, fontWeight: "900", marginTop: 4 },
-  heroSub: { color: COLORS.textSecondary, fontSize: 13 },
+  heroLabel: { color: COLORS.goldMuted, fontSize: 10, letterSpacing: 1.5, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  heroValue: { color: COLORS.goldPremium, fontSize: 42, fontWeight: "900", marginTop: 4, fontFamily: FONTS.headingBold },
+  heroSub: { color: COLORS.textSecondary, fontSize: 13, fontFamily: FONTS.body },
   progressBar: { height: 6, backgroundColor: COLORS.border, borderRadius: 4, marginTop: 12 },
   progressFill: { height: 6, backgroundColor: COLORS.goldPremium, borderRadius: 4 },
-  daysText: { color: COLORS.textMuted, fontSize: 11, marginTop: 8, textTransform: "uppercase", letterSpacing: 1 },
+  daysText: { color: COLORS.textMuted, fontSize: 11, marginTop: 8, textTransform: "uppercase", letterSpacing: 1, fontFamily: FONTS.body },
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xxl,
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  caption: { color: COLORS.goldMuted, fontSize: 11, letterSpacing: 1.5, fontWeight: "700" },
-  target: { color: "#fff", fontWeight: "700" },
+  caption: { color: COLORS.goldMuted, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  target: { color: COLORS.textPrimary, fontWeight: "700", fontFamily: FONTS.bodyBold },
   ringBar: {
     height: 10,
     backgroundColor: COLORS.border,
@@ -238,8 +238,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: RADIUS.md,
   },
-  chipLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700" },
-  chipValue: { color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 2 },
+  chipLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  chipValue: { color: COLORS.textPrimary, fontSize: 16, fontWeight: "800", marginTop: 2, fontFamily: FONTS.headingBold },
   grid: { flexDirection: "row", gap: 12, marginBottom: 16 },
   gridCard: {
     flex: 1,
@@ -249,11 +249,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  gridVal: { color: "#fff", fontSize: 22, fontWeight: "800", marginTop: 10 },
-  gridLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700" },
+  gridVal: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", marginTop: 10, fontFamily: FONTS.headingBold },
+  gridLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 1, fontWeight: "700", fontFamily: FONTS.bodyBold },
   miniBar: { height: 4, backgroundColor: COLORS.border, borderRadius: 2, marginTop: 10 },
   miniFill: { height: 4, backgroundColor: COLORS.goldPremium },
-  addHint: { color: COLORS.goldMuted, fontSize: 10, marginTop: 8 },
+  addHint: { color: COLORS.goldMuted, fontSize: 10, marginTop: 8, fontFamily: FONTS.body },
   actions: { flexDirection: "row", gap: 12, marginBottom: 16 },
   actionBtn: {
     flex: 1,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  actionBtnText: { color: "#000", fontWeight: "800", letterSpacing: 1 },
+  actionBtnText: { color: COLORS.onAccent, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
   actionBtnAlt: {
     flex: 1,
     backgroundColor: "transparent",
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.goldPremium,
   },
-  actionBtnAltText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1 },
+  actionBtnAltText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
   heroCTA: {
     backgroundColor: COLORS.surfaceElevated,
     borderWidth: 1,
@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xxl,
     padding: SPACING.l,
   },
-  heroCTATitle: { color: "#fff", fontSize: 22, fontWeight: "800" },
-  heroCTASub: { color: COLORS.textSecondary, marginTop: 4 },
+  heroCTATitle: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", fontFamily: FONTS.headingBold },
+  heroCTASub: { color: COLORS.textSecondary, marginTop: 4, fontFamily: FONTS.body },
   heroBtn: { marginTop: 16, alignSelf: "flex-start" },
-  heroBtnText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1 },
+  heroBtnText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
 });

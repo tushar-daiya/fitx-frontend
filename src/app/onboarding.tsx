@@ -17,7 +17,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
 import { track } from "@/src/lib/analytics";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -343,7 +343,7 @@ export default function Onboarding() {
                 disabled={onboard.isPending}
               >
                 {onboard.isPending ? (
-                  <ActivityIndicator color="#000" />
+                  <ActivityIndicator color={COLORS.onAccent} />
                 ) : (
                   <Text style={styles.primaryBtnText}>FINISH</Text>
                 )}
@@ -362,8 +362,20 @@ const styles = StyleSheet.create({
   progressDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: COLORS.border },
   progressDotActive: { backgroundColor: COLORS.goldPremium },
   scroll: { padding: SPACING.l, paddingBottom: 120 },
-  q: { color: "#fff", fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
-  qSub: { color: COLORS.textSecondary, fontSize: 14, marginTop: 6, marginBottom: 24 },
+  q: {
+    color: COLORS.textPrimary,
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    fontFamily: FONTS.headingBold,
+  },
+  qSub: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    marginTop: 6,
+    marginBottom: 24,
+    fontFamily: FONTS.body,
+  },
   opt: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.lg,
@@ -372,16 +384,21 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 12,
   },
-  optActive: { borderColor: COLORS.goldPremium, backgroundColor: "#1a1505" },
-  optText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  optActive: { borderColor: COLORS.goldPremium, backgroundColor: COLORS.goldTint },
+  optText: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: FONTS.bodyBold,
+  },
   optTextActive: { color: COLORS.goldPremium },
   fieldLabel: {
     color: COLORS.textSecondary,
     fontSize: 12,
-    fontWeight: "700",
     letterSpacing: 0.5,
     marginBottom: 6,
     textTransform: "uppercase",
+    fontFamily: FONTS.bodyBold,
   },
   input: {
     backgroundColor: COLORS.surfaceElevated,
@@ -390,25 +407,31 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: 18,
     paddingVertical: 18,
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: FONTS.bodyBold,
   },
   inputHint: {
     color: COLORS.textMuted,
     fontSize: 12,
     marginTop: 6,
     marginLeft: 4,
+    fontFamily: FONTS.body,
   },
   errBanner: {
-    backgroundColor: "#1a0505",
+    backgroundColor: COLORS.errorTint,
     borderWidth: 1,
-    borderColor: "#EF4444",
+    borderColor: COLORS.error,
     borderRadius: RADIUS.lg,
     padding: 14,
     marginTop: 8,
   },
-  errText: { color: "#EF4444", fontSize: 13, fontWeight: "600" },
+  errText: {
+    color: COLORS.error,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: FONTS.bodyBold,
+  },
   footer: {
     padding: SPACING.l,
     flexDirection: "row",
@@ -423,7 +446,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
   },
-  primaryBtnText: { color: "#000", fontWeight: "800", letterSpacing: 1.5 },
+  primaryBtnText: {
+    color: COLORS.onAccent,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    fontFamily: FONTS.bodyBold,
+  },
   backBtn: {
     paddingHorizontal: 28,
     borderRadius: RADIUS.pill,
@@ -432,5 +460,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  backBtnText: { color: COLORS.textSecondary, fontWeight: "700" },
+  backBtnText: { color: COLORS.textSecondary, fontFamily: FONTS.bodyBold },
 });

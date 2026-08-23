@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Image } from "react-native";
+import { View, Text, StyleSheet, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS } from "@/src/theme";
+import { COLORS, FONTS } from "@/src/theme";
+import { Logo } from "@/src/Logo";
 
 export default function Index() {
   const { user, loading } = useAuthStore();
@@ -29,11 +30,7 @@ export default function Index() {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]} testID="splash-screen">
-      <Image
-        source={require("../../assets/images/icon.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      <Logo size={160} style={styles.logo} />
       <Text style={styles.brand}>FitX</Text>
       <Text style={styles.tag}>Elevate Your Fitness Journey</Text>
 
@@ -74,19 +71,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logo: {
-    width: 120,
-    height: 120,
+    marginBottom: 4,
   },
   brand: {
     color: COLORS.goldPremium,
-    fontSize: 48,
-    fontWeight: "900",
+    fontFamily: FONTS.headingBold,
+    fontSize: 52,
     letterSpacing: 6,
     marginTop: 16,
     textAlign: "center",
   },
   tag: {
     color: COLORS.textSecondary,
+    fontFamily: FONTS.body,
     fontSize: 14,
     letterSpacing: 2,
     marginTop: 8,

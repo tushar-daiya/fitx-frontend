@@ -13,7 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAnalyzeForm } from "@/src/hooks/useForm";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function FormCorrector() {
   const router = useRouter();
@@ -84,14 +84,14 @@ export default function FormCorrector() {
         >
           {analyzeForm.isPending ? (
             <View style={{ alignItems: "center" }}>
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color={COLORS.onAccent} />
               <Text style={[styles.uploadText, { marginTop: 6, fontSize: 11 }]}>
                 Analyzing your form with AI...
               </Text>
             </View>
           ) : (
             <>
-              <Ionicons name="cloud-upload" size={22} color="#000" />
+              <Ionicons name="cloud-upload" size={22} color={COLORS.onAccent} />
               <Text style={styles.uploadText}>UPLOAD WORKOUT VIDEO</Text>
             </>
           )}
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", fontFamily: FONTS.headingBold },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
   heroCard: {
     backgroundColor: COLORS.surface,
@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     marginTop: 12,
     letterSpacing: 0.3,
+    fontFamily: FONTS.headingBold,
   },
   heroSub: {
     color: COLORS.textSecondary,
@@ -210,6 +211,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
     lineHeight: 19,
+    fontFamily: FONTS.body,
   },
   tipsCard: {
     backgroundColor: COLORS.surfaceElevated,
@@ -225,10 +227,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1.5,
     marginBottom: 10,
+    fontFamily: FONTS.bodyBold,
   },
   tipRow: { flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 8 },
   tipDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: COLORS.goldPremium },
-  tipText: { color: COLORS.textSecondary, fontSize: 13 },
+  tipText: { color: COLORS.textSecondary, fontSize: 13, fontFamily: FONTS.body },
   uploadBtn: {
     backgroundColor: COLORS.goldPremium,
     borderRadius: RADIUS.pill,
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
   },
-  uploadText: { color: "#000", fontWeight: "900", letterSpacing: 1.5, fontSize: 14 },
+  uploadText: { color: COLORS.onAccent, fontWeight: "900", letterSpacing: 1.5, fontSize: 14, fontFamily: FONTS.bodyBold },
   resultCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xxl,
@@ -253,7 +256,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
-  detectedLabel: { color: COLORS.goldMuted, fontSize: 10, letterSpacing: 1.5, fontWeight: "800" },
+  detectedLabel: { color: COLORS.goldMuted, fontSize: 10, letterSpacing: 1.5, fontWeight: "800", fontFamily: FONTS.bodyBold },
   confTag: {
     color: COLORS.goldPremium,
     fontSize: 9,
@@ -263,16 +266,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.pill,
+    fontFamily: FONTS.bodyBold,
   },
   detectedName: {
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 22,
     fontWeight: "900",
     textTransform: "capitalize",
     marginBottom: 18,
+    fontFamily: FONTS.headingBold,
   },
-  scoreLabel: { color: COLORS.goldMuted, fontSize: 11, letterSpacing: 1.5, fontWeight: "700" },
-  scoreValue: { color: COLORS.goldPremium, fontSize: 48, fontWeight: "900", marginTop: 4 },
+  scoreLabel: { color: COLORS.goldMuted, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", fontFamily: FONTS.bodyBold },
+  scoreValue: { color: COLORS.goldPremium, fontSize: 48, fontWeight: "900", marginTop: 4, fontFamily: FONTS.headingBold },
   scoreBar: {
     height: 8,
     backgroundColor: COLORS.border,
@@ -281,7 +286,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   scoreFill: { height: 8 },
-  summary: { color: "#fff", fontSize: 15, marginTop: 14, lineHeight: 22 },
+  summary: { color: COLORS.textPrimary, fontSize: 15, marginTop: 14, lineHeight: 22, fontFamily: FONTS.body },
   coachLabel: {
     color: COLORS.goldMuted,
     fontSize: 11,
@@ -289,11 +294,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 22,
     marginBottom: 10,
+    fontFamily: FONTS.bodyBold,
   },
   coachRow: { flexDirection: "row", gap: 10, alignItems: "flex-start", marginBottom: 10 },
-  coachText: { color: "#fff", flex: 1, fontSize: 14, lineHeight: 20 },
-  idealText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 19 },
-  framesText: { color: COLORS.textMuted, fontSize: 11, marginTop: 16, textAlign: "center" },
+  coachText: { color: COLORS.textPrimary, flex: 1, fontSize: 14, lineHeight: 20, fontFamily: FONTS.body },
+  idealText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 19, fontFamily: FONTS.body },
+  framesText: { color: COLORS.textMuted, fontSize: 11, marginTop: 16, textAlign: "center", fontFamily: FONTS.body },
   againBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -305,5 +311,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderAccent,
   },
-  againText: { color: COLORS.goldPremium, fontSize: 13, fontWeight: "700" },
+  againText: { color: COLORS.goldPremium, fontSize: 13, fontWeight: "700", fontFamily: FONTS.bodyBold },
 });

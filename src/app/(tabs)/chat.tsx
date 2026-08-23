@@ -17,7 +17,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSendMessage } from "@/src/hooks/useChat";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import { useKeyboardBehavior } from "@/src/hooks/useKeyboardBehavior";
 import {
   ExpoSpeechRecognitionModule,
@@ -244,7 +244,7 @@ export default function Chat() {
             <Ionicons
               name={recognizing ? "stop" : "mic"}
               size={22}
-              color="#000"
+              color={COLORS.onAccent}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -253,7 +253,7 @@ export default function Chat() {
             style={styles.sendBtn}
             disabled={sendMsg.isPending}
           >
-            <Ionicons name="send" size={22} color="#000" />
+            <Ionicons name="send" size={22} color={COLORS.onAccent} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -268,8 +268,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  title: { color: "#fff", fontSize: 24, fontWeight: "800" },
-  sub: { color: COLORS.textSecondary, marginTop: 4, fontSize: 12 },
+  title: { color: COLORS.textPrimary, fontSize: 24, fontWeight: "800", fontFamily: FONTS.headingBold },
+  sub: { color: COLORS.textSecondary, marginTop: 4, fontSize: 12, fontFamily: FONTS.body },
   messages: { padding: SPACING.l, gap: 10 },
   bubble: { borderRadius: RADIUS.xl, padding: 14, maxWidth: "85%" },
   botBubble: {
@@ -279,9 +279,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   userBubble: { backgroundColor: COLORS.goldPremium, alignSelf: "flex-end" },
-  bubbleText: { fontSize: 15, lineHeight: 21 },
-  botText: { color: "#fff" },
-  userText: { color: "#000", fontWeight: "600" },
+  bubbleText: { fontSize: 15, lineHeight: 21, fontFamily: FONTS.body },
+  botText: { color: COLORS.textPrimary },
+  userText: { color: COLORS.onAccent, fontWeight: "600", fontFamily: FONTS.bodyMedium },
   suggestionsScroll: { maxHeight: "50%", flexShrink: 0 },
   suggestionsRow: { paddingHorizontal: SPACING.l, paddingBottom: 10, gap: 8 },
   suggestionCard: {
@@ -307,16 +307,17 @@ const styles = StyleSheet.create({
   },
   suggestionTextWrap: { flex: 1 },
   suggestionTitle: {
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 13,
-    fontWeight: "700",
     lineHeight: 17,
+    fontFamily: FONTS.bodyBold,
   },
   suggestionSub: {
     color: COLORS.textMuted,
     fontSize: 11,
     lineHeight: 15,
     marginTop: 2,
+    fontFamily: FONTS.body,
   },
   inputRow: {
     flexDirection: "row",
@@ -333,8 +334,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     paddingHorizontal: 18,
     paddingVertical: 12,
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 15,
+    fontFamily: FONTS.body,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -347,6 +349,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   micActive: {
-    backgroundColor: "#ff4444",
+    backgroundColor: COLORS.error,
   },
 });

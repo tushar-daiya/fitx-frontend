@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 import { useGyms } from "@/src/hooks/useGyms";
 import type { Gym } from "@/src/types/api";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function GymsNearby() {
   const router = useRouter();
@@ -132,7 +132,7 @@ export default function GymsNearby() {
             <View key={`${g.lat}-${g.lon}-${i}`} style={styles.card} testID={`gym-${i}`}>
               <View style={styles.cardHeader}>
                 <View style={styles.iconBox}>
-                  <Ionicons name="barbell" size={22} color="#000" />
+                  <Ionicons name="barbell" size={22} color={COLORS.onAccent} />
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.gymName}>{g.name}</Text>
@@ -181,11 +181,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  title: { color: COLORS.textPrimary, fontSize: 20, fontWeight: "800", fontFamily: FONTS.headingBold },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: SPACING.l },
-  loadingText: { color: COLORS.textSecondary, marginTop: 16 },
-  errTitle: { color: "#fff", fontSize: 20, fontWeight: "800", marginTop: 12 },
-  errText: { color: COLORS.textSecondary, textAlign: "center", marginTop: 8, lineHeight: 20 },
+  loadingText: { color: COLORS.textSecondary, marginTop: 16, fontFamily: FONTS.body },
+  errTitle: { color: COLORS.textPrimary, fontSize: 20, fontWeight: "800", marginTop: 12, fontFamily: FONTS.headingBold },
+  errText: { color: COLORS.textSecondary, textAlign: "center", marginTop: 8, lineHeight: 20, fontFamily: FONTS.body },
   primaryBtn: {
     backgroundColor: COLORS.goldPremium,
     borderRadius: RADIUS.pill,
@@ -193,9 +193,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     marginTop: 20,
   },
-  primaryBtnText: { color: "#000", fontWeight: "900", letterSpacing: 1.5 },
+  primaryBtnText: { color: COLORS.onAccent, fontWeight: "900", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
   list: { padding: SPACING.l, paddingBottom: 40 },
-  subhead: { color: COLORS.textSecondary, fontSize: 13, marginBottom: 14, letterSpacing: 0.5 },
+  subhead: { color: COLORS.textSecondary, fontSize: 13, marginBottom: 14, letterSpacing: 0.5, fontFamily: FONTS.body },
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xxl,
@@ -213,10 +213,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  gymName: { color: "#fff", fontSize: 16, fontWeight: "800" },
-  gymDist: { color: COLORS.goldPremium, fontSize: 12, fontWeight: "700", marginTop: 2 },
-  gymAddr: { color: COLORS.textSecondary, fontSize: 13, marginTop: 10, lineHeight: 18 },
-  gymHours: { color: COLORS.textMuted, fontSize: 12, marginTop: 6 },
+  gymName: { color: COLORS.textPrimary, fontSize: 16, fontWeight: "800", fontFamily: FONTS.headingSemiBold },
+  gymDist: { color: COLORS.goldPremium, fontSize: 12, fontWeight: "700", marginTop: 2, fontFamily: FONTS.bodyBold },
+  gymAddr: { color: COLORS.textSecondary, fontSize: 13, marginTop: 10, lineHeight: 18, fontFamily: FONTS.body },
+  gymHours: { color: COLORS.textMuted, fontSize: 12, marginTop: 6, fontFamily: FONTS.body },
   actions: { flexDirection: "row", gap: 8, marginTop: 14, flexWrap: "wrap" },
   actionBtn: {
     flexDirection: "row",
@@ -229,12 +229,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderAccent,
   },
-  actionText: { color: COLORS.goldPremium, fontSize: 12, fontWeight: "700", letterSpacing: 0.3 },
+  actionText: { color: COLORS.goldPremium, fontSize: 12, fontWeight: "700", letterSpacing: 0.3, fontFamily: FONTS.bodyBold },
   footer: {
     color: COLORS.textMuted,
     fontSize: 11,
     textAlign: "center",
     marginTop: 20,
     letterSpacing: 0.5,
+    fontFamily: FONTS.body,
   },
 });

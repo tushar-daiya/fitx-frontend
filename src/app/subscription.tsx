@@ -7,7 +7,7 @@ import {
 import { track } from "@/src/lib/analytics";
 import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import type { PaymentOrder } from "@/src/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -70,7 +70,7 @@ function buildRazorpayHtml(order: PaymentOrder): string {
     order_id: "${order.order_id}",
     name: "FitX",
     description: "Subscription",
-    theme: { color: "#D4AF37" },
+    theme: { color: "${COLORS.gold}" },
     handler: function(response) {
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: "success", ...response }));
     },
@@ -213,7 +213,7 @@ export default function Subscription() {
     >
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={26} color="#fff" />
+          <Ionicons name="chevron-back" size={26} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Subscription</Text>
         <View style={{ width: 26 }} />
@@ -255,7 +255,7 @@ export default function Subscription() {
           status.active_plans.length === 0 &&
           (status.history.length > 0 ? (
             <View style={styles.noticeBanner}>
-              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Ionicons name="alert-circle" size={20} color={COLORS.error} />
               <Text style={styles.noticeText}>
                 Your subscription has expired. Choose a plan below to restore
                 access.
@@ -389,7 +389,7 @@ export default function Subscription() {
                 </View>
                 <View style={[styles.radio, isSel && styles.radioActive]}>
                   {isSel && (
-                    <Ionicons name="checkmark" size={16} color="#000" />
+                    <Ionicons name="checkmark" size={16} color={COLORS.onAccent} />
                   )}
                 </View>
               </View>
@@ -443,7 +443,7 @@ export default function Subscription() {
             disabled={ctaDisabled}
           >
             {busy ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color={COLORS.onAccent} />
             ) : (
               <Text style={styles.ctaText}>{ctaLabel()}</Text>
             )}
@@ -454,7 +454,7 @@ export default function Subscription() {
       {webviewHtml && (
         <Modal visible animationType="slide">
           <SafeAreaView
-            style={{ flex: 1, backgroundColor: "#000" }}
+            style={{ flex: 1, backgroundColor: COLORS.bg }}
             edges={["top"]}
           >
             <WebView
@@ -603,10 +603,10 @@ function UpcomingPlanCard({
         disabled={activating}
       >
         {activating ? (
-          <ActivityIndicator size="small" color="#000" />
+          <ActivityIndicator size="small" color={COLORS.onAccent} />
         ) : (
           <>
-            <Ionicons name="flash" size={14} color="#000" />
+            <Ionicons name="flash" size={14} color={COLORS.onAccent} />
             <Text style={styles.activateBtnText}>ACTIVATE NOW</Text>
           </>
         )}
@@ -653,30 +653,34 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: 4 },
   headerTitle: {
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 1,
+    fontFamily: FONTS.bodyBold,
   },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
   title: {
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 30,
     fontWeight: "900",
     letterSpacing: -0.5,
+    fontFamily: FONTS.headingBold,
   },
   title2: {
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 22,
     fontWeight: "900",
     letterSpacing: -0.3,
     marginBottom: 12,
+    fontFamily: FONTS.headingBold,
   },
   sub: {
     color: COLORS.textSecondary,
     marginTop: 6,
     marginBottom: 16,
     lineHeight: 20,
+    fontFamily: FONTS.body,
   },
   section: { marginBottom: 8 },
   sectionTitle: {
@@ -685,6 +689,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1.5,
     marginBottom: 8,
+    fontFamily: FONTS.bodyBold,
   },
   historyToggle: {
     flexDirection: "row",
@@ -697,26 +702,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
-    backgroundColor: "#1a0505",
+    backgroundColor: COLORS.errorTint,
     borderWidth: 1,
-    borderColor: "#EF4444",
+    borderColor: COLORS.error,
     borderRadius: RADIUS.lg,
     padding: 14,
     marginBottom: 16,
   },
-  noticeText: { color: "#fff", fontSize: 13, flex: 1, lineHeight: 18 },
+  noticeText: { color: COLORS.textPrimary, fontSize: 13, flex: 1, lineHeight: 18, fontFamily: FONTS.body },
   welcomeBanner: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
-    backgroundColor: "#1a1505",
+    backgroundColor: COLORS.goldTint,
     borderWidth: 1,
     borderColor: COLORS.goldPremium,
     borderRadius: RADIUS.lg,
     padding: 14,
     marginBottom: 16,
   },
-  welcomeText: { color: "#fff", fontSize: 13, flex: 1, lineHeight: 18 },
+  welcomeText: { color: COLORS.textPrimary, fontSize: 13, flex: 1, lineHeight: 18, fontFamily: FONTS.body },
   subCard: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xl,
@@ -728,9 +733,19 @@ const styles = StyleSheet.create({
   subCardUpcoming: { borderColor: COLORS.goldPremium },
   subCardExpired: { borderColor: COLORS.border, opacity: 0.7 },
   subCardRow: { flexDirection: "row", alignItems: "center" },
-  subCardTitle: { color: "#fff", fontSize: 15, fontWeight: "800" },
+  subCardTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    fontWeight: "800",
+    fontFamily: FONTS.bodyBold,
+  },
   subCardTitleMuted: { color: COLORS.textMuted },
-  subCardDate: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  subCardDate: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+    fontFamily: FONTS.body,
+  },
   daysChip: {
     backgroundColor: COLORS.success,
     borderRadius: RADIUS.pill,
@@ -738,7 +753,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   daysChipExpired: { backgroundColor: COLORS.surfaceElevated },
-  daysChipText: { color: "#000", fontSize: 11, fontWeight: "900" },
+  daysChipText: {
+    color: COLORS.onAccent,
+    fontSize: 11,
+    fontWeight: "900",
+    fontFamily: FONTS.bodyBold,
+  },
   progressTrack: {
     height: 4,
     backgroundColor: COLORS.border,
@@ -758,10 +778,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   activateBtnText: {
-    color: "#000",
+    color: COLORS.onAccent,
     fontWeight: "900",
     fontSize: 12,
     letterSpacing: 1,
+    fontFamily: FONTS.bodyBold,
   },
   activateHint: {
     color: COLORS.textMuted,
@@ -769,6 +790,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 6,
     lineHeight: 15,
+    fontFamily: FONTS.body,
   },
   regionRow: {
     flexDirection: "row",
@@ -793,8 +815,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.5,
     fontSize: 13,
+    fontFamily: FONTS.bodyBold,
   },
-  regionTextActive: { color: "#000" },
+  regionTextActive: { color: COLORS.onAccent },
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xxl,
@@ -803,7 +826,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     marginBottom: 14,
   },
-  cardActive: { borderColor: COLORS.goldPremium, backgroundColor: "#1a1505" },
+  cardActive: { borderColor: COLORS.goldPremium, backgroundColor: COLORS.goldTint },
   cardCurrent: { borderColor: COLORS.success },
   cardUpcoming: { borderColor: COLORS.goldPremium },
   badge: {
@@ -816,25 +839,28 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   badgeActive: { backgroundColor: COLORS.success },
-  badgeUpcoming: { backgroundColor: "#7C6A1E" },
+  badgeUpcoming: { backgroundColor: COLORS.goldMuted },
   badgeText: {
-    color: "#000",
+    color: COLORS.onAccent,
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: FONTS.bodyBold,
   },
   cardHeader: { flexDirection: "row", alignItems: "center" },
   planLabel: {
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,
+    fontFamily: FONTS.bodyBold,
   },
   price: {
     color: COLORS.goldPremium,
     fontSize: 32,
     fontWeight: "900",
     marginTop: 4,
+    fontFamily: FONTS.headingBold,
   },
   priceQueued: { color: COLORS.textMuted },
   radio: {
@@ -851,7 +877,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.goldPremium,
   },
   perkRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
-  perkText: { color: COLORS.textSecondary, fontSize: 14 },
+  perkText: { color: COLORS.textSecondary, fontSize: 14, fontFamily: FONTS.body },
   trialUsedCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -864,7 +890,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     opacity: 0.5,
   },
-  trialUsedText: { color: COLORS.textMuted, fontSize: 13 },
+  trialUsedText: { color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.body },
   trustRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -879,6 +905,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     flex: 1,
     lineHeight: 16,
+    fontFamily: FONTS.body,
   },
   footer: {
     padding: SPACING.l,
@@ -894,9 +921,10 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaText: {
-    color: "#000",
+    color: COLORS.onAccent,
     fontWeight: "900",
     letterSpacing: 1.5,
     fontSize: 15,
+    fontFamily: FONTS.bodyBold,
   },
 });

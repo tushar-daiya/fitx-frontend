@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useWorkoutVideos } from "@/src/hooks/useWorkouts";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 
 export default function Workouts() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function Workouts() {
           style={[styles.tab, type === "home" && styles.tabActive]}
           onPress={() => setType("home")}
         >
-          <Ionicons name="home" size={18} color={type === "home" ? "#000" : COLORS.textSecondary} />
+          <Ionicons name="home" size={18} color={type === "home" ? COLORS.onAccent : COLORS.textSecondary} />
           <Text style={[styles.tabText, type === "home" && styles.tabTextActive]}>HOME</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -43,7 +43,7 @@ export default function Workouts() {
           style={[styles.tab, type === "gym" && styles.tabActive]}
           onPress={() => setType("gym")}
         >
-          <Ionicons name="barbell" size={18} color={type === "gym" ? "#000" : COLORS.textSecondary} />
+          <Ionicons name="barbell" size={18} color={type === "gym" ? COLORS.onAccent : COLORS.textSecondary} />
           <Text style={[styles.tabText, type === "gym" && styles.tabTextActive]}>GYM</Text>
         </TouchableOpacity>
       </View>
@@ -58,7 +58,7 @@ export default function Workouts() {
           >
             <Image source={{ uri: v.thumbnail }} style={styles.thumb} />
             <View style={styles.playBadge}>
-              <Ionicons name="play" size={28} color="#000" />
+              <Ionicons name="play" size={28} color={COLORS.onAccent} />
             </View>
             <View style={styles.body}>
               <Text style={styles.vTitle}>{v.title}</Text>
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", fontFamily: FONTS.headingBold },
   tabRow: {
     flexDirection: "row",
     backgroundColor: COLORS.surface,
@@ -106,8 +106,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   tabActive: { backgroundColor: COLORS.goldPremium },
-  tabText: { color: COLORS.textSecondary, fontWeight: "800", letterSpacing: 1.5 },
-  tabTextActive: { color: "#000" },
+  tabText: { color: COLORS.textSecondary, fontWeight: "800", fontFamily: FONTS.bodyBold, letterSpacing: 1.5 },
+  tabTextActive: { color: COLORS.onAccent },
   list: { padding: SPACING.l, gap: 14, paddingBottom: 40 },
   card: {
     backgroundColor: COLORS.surface,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   body: { padding: SPACING.m },
-  vTitle: { color: "#fff", fontSize: 16, fontWeight: "800" },
+  vTitle: { color: COLORS.textPrimary, fontSize: 16, fontWeight: "800", fontFamily: FONTS.headingSemiBold },
   metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   metaTag: {
     backgroundColor: COLORS.surfaceElevated,
@@ -141,7 +141,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     fontSize: 11,
     fontWeight: "700",
+    fontFamily: FONTS.bodyBold,
     letterSpacing: 0.5,
   },
-  empty: { color: COLORS.textMuted, textAlign: "center", padding: 32 },
+  empty: { color: COLORS.textMuted, textAlign: "center", padding: 32, fontFamily: FONTS.body },
 });

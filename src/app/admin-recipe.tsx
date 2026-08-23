@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCreateRecipe } from "@/src/hooks/useRecipes";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 const DIETS = ["veg", "non_veg", "eggetarian", "vegan", "jain"];
 
@@ -207,7 +207,7 @@ export default function AdminRecipe() {
             style={styles.cta}
           >
             {createRecipe.isPending ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color={COLORS.onAccent} />
             ) : (
               <Text style={styles.ctaText}>SAVE RECIPE</Text>
             )}
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: SPACING.l,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", fontFamily: FONTS.headingBold },
   scroll: { padding: SPACING.l, paddingBottom: 40 },
   section: {
     color: COLORS.goldMuted,
@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 12,
     marginBottom: 8,
+    fontFamily: FONTS.bodyBold,
   },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
   chip: {
@@ -278,10 +279,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   chipActive: { backgroundColor: COLORS.goldPremium, borderColor: COLORS.goldPremium },
-  chipText: { color: "#fff", fontWeight: "700", fontSize: 12, textTransform: "capitalize" },
-  chipTextActive: { color: "#000" },
+  chipText: { color: COLORS.textPrimary, fontWeight: "700", fontSize: 12, textTransform: "capitalize", fontFamily: FONTS.bodyBold },
+  chipTextActive: { color: COLORS.onAccent },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  fieldLabel: { color: COLORS.textSecondary, fontSize: 11, marginBottom: 4, letterSpacing: 1, fontWeight: "700" },
+  fieldLabel: { color: COLORS.textSecondary, fontSize: 11, marginBottom: 4, letterSpacing: 1, fontWeight: "700", fontFamily: FONTS.bodyBold },
   field: {
     backgroundColor: COLORS.surfaceElevated,
     borderRadius: RADIUS.lg,
@@ -289,8 +290,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: "#fff",
+    color: COLORS.textPrimary,
     fontSize: 15,
+    fontFamily: FONTS.body,
   },
   footer: { padding: SPACING.l, borderTopWidth: 1, borderTopColor: COLORS.border },
   cta: {
@@ -299,7 +301,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
   },
-  ctaText: { color: "#000", fontWeight: "900", letterSpacing: 1.5 },
-  fieldError: { borderColor: "#EF4444" },
-  errText: { color: "#EF4444", fontSize: 11, marginTop: 3, fontWeight: "600" },
+  ctaText: { color: COLORS.onAccent, fontWeight: "900", letterSpacing: 1.5, fontFamily: FONTS.bodyBold },
+  fieldError: { borderColor: COLORS.error },
+  errText: { color: COLORS.error, fontSize: 11, marginTop: 3, fontWeight: "600", fontFamily: FONTS.bodyMedium },
 });

@@ -1,7 +1,7 @@
 import React from "react";
 import Svg, { Path, Ellipse } from "react-native-svg";
 import { View, Text, StyleSheet } from "react-native";
-import { COLORS } from "./theme";
+import { COLORS, FONTS } from "./theme";
 
 export function Avatar({
   gender = "male",
@@ -93,5 +93,5 @@ export function Avatar({
 
 const styles = StyleSheet.create({
   wrap: { alignItems: "center" },
-  label: { color: COLORS.goldPremium, fontSize: 11, letterSpacing: 1.5, marginTop: 4, fontWeight: "700" },
+  label: { color: COLORS.goldPremium, fontFamily: FONTS.bodyBold, fontSize: 11, letterSpacing: 1.5, marginTop: 4 },
 });

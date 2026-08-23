@@ -10,12 +10,12 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
-import { COLORS, RADIUS, SPACING } from "@/src/theme";
+import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
+import { Logo } from "@/src/Logo";
 
 export default function Signup() {
   const router = useRouter();
@@ -46,11 +46,7 @@ export default function Signup() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Image
-            source={require("../../assets/images/icon.png")}
-            style={styles.logoImg}
-            resizeMode="contain"
-          />
+          <Logo size={112} style={styles.logoImg} />
           <Text style={styles.brand}>FitX</Text>
           <View style={styles.card}>
             <Text style={styles.heading}>Create your account</Text>
@@ -91,7 +87,7 @@ export default function Signup() {
               disabled={busy}
             >
               {busy ? (
-                <ActivityIndicator color="#000" />
+                <ActivityIndicator color={COLORS.onAccent} />
               ) : (
                 <Text style={styles.primaryBtnText}>CREATE ACCOUNT</Text>
               )}
@@ -116,11 +112,11 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { flexGrow: 1, padding: SPACING.l, justifyContent: "center" },
-  logoImg: { width: 96, height: 96, alignSelf: "center", marginBottom: 8 },
+  logoImg: { alignSelf: "center", marginBottom: 8 },
   brand: {
     color: COLORS.goldPremium,
-    fontSize: 56,
-    fontWeight: "900",
+    fontFamily: FONTS.headingBold,
+    fontSize: 60,
     letterSpacing: 3,
     textAlign: "center",
     marginBottom: SPACING.xl,
@@ -132,8 +128,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     padding: SPACING.l,
   },
-  heading: { color: "#fff", fontSize: 26, fontWeight: "800" },
-  sub: { color: COLORS.textSecondary, marginTop: 4, marginBottom: SPACING.l },
+  heading: { color: COLORS.textPrimary, fontFamily: FONTS.headingSemiBold, fontSize: 28 },
+  sub: { color: COLORS.textSecondary, fontFamily: FONTS.body, marginTop: 4, marginBottom: SPACING.l },
   input: {
     backgroundColor: COLORS.surfaceElevated,
     borderRadius: RADIUS.lg,
@@ -141,7 +137,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: "#fff",
+    color: COLORS.textPrimary,
+    fontFamily: FONTS.body,
     fontSize: 16,
     marginBottom: SPACING.m,
   },
@@ -152,5 +149,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: SPACING.s,
   },
-  primaryBtnText: { color: "#000", fontWeight: "800", letterSpacing: 1.5 },
+  primaryBtnText: { color: COLORS.onAccent, fontFamily: FONTS.bodyBold, letterSpacing: 1.5 },
 });
