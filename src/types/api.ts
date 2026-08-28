@@ -13,6 +13,8 @@ export type UserProfile = {
 export type FitXUser = {
   id: string;
   email: string;
+  phone: string | null;
+  is_phone_verified: boolean;
   name: string;
   role: "user" | "admin";
   onboarded: boolean;
@@ -26,6 +28,12 @@ export type FitXUser = {
 export type AuthResponse = {
   token: string;
   user: FitXUser;
+};
+
+export type PreAuthResponse = {
+  pre_auth_token: string;
+  phone_verification_required?: true;
+  phone: string | null;
 };
 
 // ── Subscription ──────────────────────────────────────────────────────────

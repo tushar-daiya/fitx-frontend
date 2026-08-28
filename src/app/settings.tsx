@@ -44,9 +44,30 @@ function validateNumericField(raw: string, key: LimitKey): string | null {
 
 export default function Settings() {
   const router = useRouter();
-  const { user, refresh } = useAuthStore();
+  const { user, refresh, changePhoneRequest } = useAuthStore();
   const { lang, setLang, t } = useI18nStore();
   const p = user?.profile;
+  const [changingPhone, setChangingPhone] = useState(false);
+  const [newPhone, setNewPhone] = useState("");
+  const [phoneBusy, setPhoneBusy] = useState(false);
+
+  const onChangePhone = async () => {
+    if (!newPhone.trim()) return Alert.alert("Required", "Enter your new phone number");
+    setPhoneBusy(true);
+    try {
+      const fullPhone = `+91${newPhone.trim()}`;
+      await changePhoneRequest(fullPhone);
+      setChangingPhone(false);
+      router.push({
+        pathname: "/verify-otp",
+        params: { phone: fullPhone, purpose: "phone_change" },
+      });
+    } catch (e: any) {
+      Alert.alert("Could not send code", e.message);
+    } finally {
+      setPhoneBusy(false);
+    }
+  };
   const [form, setForm] = useState<{
     gender: string; age: string; height_cm: string; weight_kg: string;
     target_weight_kg: string; goal: string; level: string; diet: string;
@@ -125,6 +146,52 @@ export default function Settings() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <Text style={styles.section}>ACCOUNT</Text>
+          <View style={styles.linkCard}>
+            <View>
+              <Text style={styles.linkLabel}>Phone number</Text>
+              <Text style={styles.linkSub}>
+                {user?.phone || "Not set"} · {user?.is_phone_verified ? "Verified" : "Unverified"}
+              </Text>
+            </View>
+            <TouchableOpacity testID="change-phone-toggle" onPress={() => setChangingPhone((v) => !v)}>
+              <Text style={{ color: COLORS.goldPremium, fontFamily: FONTS.bodyBold, fontSize: 13 }}>
+                {changingPhone ? "Cancel" : "Change"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {changingPhone && (
+            <View style={{ marginBottom: 12 }}>
+              <View style={{ flexDirection: "row" }}>
+                <View style={styles.phonePrefix}>
+                  <Text style={{ color: COLORS.textPrimary, fontFamily: FONTS.bodyBold, fontSize: 16 }}>+91</Text>
+                </View>
+                <TextInput
+                  testID="change-phone-input"
+                  placeholder="10-digit mobile number"
+                  placeholderTextColor={COLORS.textMuted}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                  value={newPhone}
+                  onChangeText={(v) => setNewPhone(v.replace(/[^0-9]/g, ""))}
+                  style={[styles.field, { flex: 1 }]}
+                />
+              </View>
+              <TouchableOpacity
+                testID="change-phone-submit"
+                style={[styles.cta, { marginTop: 10 }]}
+                onPress={onChangePhone}
+                disabled={phoneBusy}
+              >
+                {phoneBusy ? (
+                  <ActivityIndicator color={COLORS.onAccent} />
+                ) : (
+                  <Text style={styles.ctaText}>SEND VERIFICATION CODE</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
           <Text style={styles.section}>GENDER</Text>
           <View style={styles.row}>
             {GENDERS.map((g) => (
@@ -352,6 +419,15 @@ const styles = StyleSheet.create({
   chipText: { color: COLORS.textPrimary, fontWeight: "700", fontFamily: FONTS.bodyBold, textTransform: "capitalize", fontSize: 13 },
   chipTextActive: { color: COLORS.onAccent },
   fieldWrap: { marginBottom: 12 },
+  phonePrefix: {
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+    marginRight: 8,
+  },
   fieldLabel: { color: COLORS.textSecondary, fontSize: 12, marginBottom: 6, fontFamily: FONTS.body },
   field: {
     backgroundColor: COLORS.surfaceElevated,

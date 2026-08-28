@@ -32,6 +32,21 @@ export default function Profile() {
         </View>
         <Text style={styles.name}>{user?.name}</Text>
         <Text style={styles.email}>{user?.email}</Text>
+        {user?.phone && (
+          <View style={styles.phoneRow}>
+            <Text style={styles.email}>{user.phone}</Text>
+            <View
+              style={[
+                styles.verifyBadge,
+                { backgroundColor: user.is_phone_verified ? COLORS.success : COLORS.error },
+              ]}
+            >
+              <Text style={styles.verifyBadgeText}>
+                {user.is_phone_verified ? "Verified" : "Unverified"}
+              </Text>
+            </View>
+          </View>
+        )}
 
         <View style={styles.trialCard}>
           <Text style={styles.trialLabel}>
@@ -172,6 +187,9 @@ const styles = StyleSheet.create({
   avatarText: { color: COLORS.onAccent, fontSize: 38, fontWeight: "900", fontFamily: FONTS.headingBold },
   name: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800", marginTop: 12, fontFamily: FONTS.headingBold },
   email: { color: COLORS.textSecondary, marginTop: 2, fontFamily: FONTS.body },
+  phoneRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+  verifyBadge: { borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 2 },
+  verifyBadgeText: { color: "#fff", fontSize: 10, fontWeight: "700", fontFamily: FONTS.bodyBold },
   trialCard: {
     width: "100%",
     backgroundColor: COLORS.surface,

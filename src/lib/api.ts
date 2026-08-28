@@ -4,6 +4,7 @@ import { track } from "@/src/lib/analytics";
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL ?? "";
 export const API = `${BASE}/api`;
 const TOKEN_KEY = "fitx_token";
+const PREAUTH_TOKEN_KEY = "fitx_preauth_token";
 
 // Collapse dynamic segments (ids, hashes) so the endpoint param stays bounded.
 function normalizeEndpoint(path: string): string {
@@ -22,12 +23,23 @@ export const getToken = () => storage.getItem<string>(TOKEN_KEY, "");
 export const setToken = (t: string) => storage.setItem(TOKEN_KEY, t);
 export const clearToken = () => storage.removeItem(TOKEN_KEY);
 
+export const getPreAuthToken = () => storage.getItem<string>(PREAUTH_TOKEN_KEY, "");
+export const setPreAuthToken = (t: string) => storage.setItem(PREAUTH_TOKEN_KEY, t);
+export const clearPreAuthToken = () => storage.removeItem(PREAUTH_TOKEN_KEY);
+
 export async function apiFetch<T = unknown>(
   path: string,
-  opts: { method?: string; body?: unknown; auth?: boolean } = {}
+  opts: { method?: string; body?: unknown; auth?: boolean | "preauth" } = {}
 ): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (opts.auth !== false) {
+  if (opts.auth === "preauth") {
+    // Prefer an existing full session token when one is already stored —
+    // an already-logged-in user who hasn't verified their phone yet (e.g.
+    // grandfathered in when this requirement shipped) hits this same gate
+    // with a normal session token, not a fresh pre-auth one.
+    const token = (await getToken()) || (await getPreAuthToken());
+    if (token) headers.Authorization = `Bearer ${token}`;
+  } else if (opts.auth !== false) {
     const token = await getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }

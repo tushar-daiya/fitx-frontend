@@ -25,10 +25,21 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   const onLogin = async () => {
-    if (!email || !password) return Alert.alert("Required", "Enter email and password");
+    if (!email || !password) return Alert.alert("Required", "Enter email/phone and password");
     setBusy(true);
     try {
-      await login(email.trim(), password);
+      const result = await login(email.trim(), password);
+      if (result?.phoneVerificationRequired) {
+        if (result.phone) {
+          router.replace({
+            pathname: "/verify-otp",
+            params: { phone: result.phone, purpose: "phone_verify" },
+          });
+        } else {
+          router.replace("/verify-phone");
+        }
+        return;
+      }
       router.replace("/");
     } catch (e: any) {
       Alert.alert("Login failed", e.message);
@@ -54,7 +65,7 @@ export default function Login() {
 
             <TextInput
               testID="login-email"
-              placeholder="Email"
+              placeholder="Email or phone number"
               placeholderTextColor={COLORS.textMuted}
               autoCapitalize="none"
               keyboardType="email-address"
@@ -71,6 +82,14 @@ export default function Login() {
               onChangeText={setPassword}
               style={styles.input}
             />
+
+            <TouchableOpacity
+              testID="go-forgot-password"
+              onPress={() => router.push("/forgot-password")}
+              style={{ alignItems: "flex-end", marginBottom: SPACING.s }}
+            >
+              <Text style={styles.linkText}>Forgot password?</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               testID="login-submit"

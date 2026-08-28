@@ -1,6 +1,12 @@
 import { getAppInstanceId, identifyUser, track } from "@/src/lib/analytics";
-import { apiFetch, clearToken, setToken } from "@/src/lib/api";
-import type { AuthResponse, FitXUser } from "@/src/types/api";
+import {
+  apiFetch,
+  clearPreAuthToken,
+  clearToken,
+  setPreAuthToken,
+  setToken,
+} from "@/src/lib/api";
+import type { AuthResponse, FitXUser, PreAuthResponse } from "@/src/types/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { AppEventsLogger } from "react-native-fbsdk-next";
@@ -33,14 +39,58 @@ function syncUserProps(u: FitXUser | null) {
   });
 }
 
+// Result of login()/signup() when phone verification still needs to happen —
+// no full session exists yet, only a short-lived pre-auth token.
+type PhoneVerificationPending = {
+  phoneVerificationRequired: true;
+  phone: string | null;
+};
+
 type AuthState = {
   user: FitXUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  login: (
+    identifier: string,
+    password: string,
+  ) => Promise<PhoneVerificationPending | void>;
+  signup: (
+    email: string,
+    phone: string,
+    password: string,
+    name: string,
+  ) => Promise<{ phone: string }>;
+  verifySignupOtp: (phone: string, otp: string) => Promise<void>;
+  resendOtp: (phone: string) => Promise<void>;
+  collectPhone: (phone: string) => Promise<void>;
+  verifyPhoneOtp: (phone: string, otp: string) => Promise<void>;
+  requestPasswordReset: (phone: string) => Promise<void>;
+  resetPassword: (
+    phone: string,
+    otp: string,
+    newPassword: string,
+  ) => Promise<void>;
+  changePhoneRequest: (phone: string) => Promise<void>;
+  changePhoneVerify: (phone: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
+
+async function completeSession(r: AuthResponse, method: string, isSignup: boolean) {
+  await setToken(r.token);
+  await clearPreAuthToken();
+  syncUserProps(r.user);
+  syncAnalyticsId();
+  if (isSignup) {
+    track("sign_up", { method });
+    AppEventsLogger.logEvent(AppEventsLogger.AppEvents.CompletedRegistration, {
+      [AppEventsLogger.AppEventParams.RegistrationMethod]: method,
+    });
+  } else {
+    track("login", { method });
+  }
+  const { registerDevicePushToken } = await import("@/src/pushNotifications");
+  registerDevicePushToken().catch(() => {});
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -66,44 +116,103 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      login: async (email, password) => {
-        const r = await apiFetch<AuthResponse>("/auth/login", {
+      login: async (identifier, password) => {
+        const r = await apiFetch<AuthResponse | PreAuthResponse>("/auth/login", {
           method: "POST",
-          body: { email, password },
+          body: { identifier, password },
           auth: false,
         });
-        await setToken(r.token);
-        set({ user: r.user });
-        track("login", { method: "email" });
-        syncUserProps(r.user);
-        syncAnalyticsId();
-        const { registerDevicePushToken } =
-          await import("@/src/pushNotifications");
-        registerDevicePushToken().catch(() => {});
+        if ("phone_verification_required" in r && r.phone_verification_required) {
+          await setPreAuthToken(r.pre_auth_token);
+          return { phoneVerificationRequired: true, phone: r.phone };
+        }
+        const auth = r as AuthResponse;
+        set({ user: auth.user });
+        await completeSession(auth, "password", false);
       },
 
-      signup: async (email, password, name) => {
-        const r = await apiFetch<AuthResponse>("/auth/signup", {
+      signup: async (email, phone, password, name) => {
+        const r = await apiFetch<PreAuthResponse>("/auth/signup", {
           method: "POST",
-          body: { email, password, name },
+          body: { email, phone, password, name },
           auth: false,
         });
-        await setToken(r.token);
+        await setPreAuthToken(r.pre_auth_token);
+        return { phone: r.phone ?? phone };
+      },
+
+      verifySignupOtp: async (phone, otp) => {
+        const r = await apiFetch<AuthResponse>("/auth/signup/verify", {
+          method: "POST",
+          body: { phone, otp },
+          auth: false,
+        });
         set({ user: r.user });
-        track("sign_up", { method: "email" });
-        AppEventsLogger.logEvent(
-          AppEventsLogger.AppEvents.CompletedRegistration,
-          {
-            [AppEventsLogger.AppEventParams.RegistrationMethod]: "email",
-          },
-        );
-        syncUserProps(r.user);
-        syncAnalyticsId();
+        await completeSession(r, "phone", true);
+      },
+
+      resendOtp: async (phone) => {
+        await apiFetch("/auth/otp/resend", {
+          method: "POST",
+          body: { phone },
+          auth: false,
+        });
+      },
+
+      collectPhone: async (phone) => {
+        await apiFetch("/auth/phone/collect", {
+          method: "POST",
+          body: { phone },
+          auth: "preauth",
+        });
+      },
+
+      verifyPhoneOtp: async (phone, otp) => {
+        const r = await apiFetch<AuthResponse>("/auth/phone/verify", {
+          method: "POST",
+          body: { phone, otp },
+          auth: "preauth",
+        });
+        set({ user: r.user });
+        await completeSession(r, "phone", false);
+      },
+
+      requestPasswordReset: async (phone) => {
+        await apiFetch("/auth/forgot-password/request-otp", {
+          method: "POST",
+          body: { phone },
+          auth: false,
+        });
+      },
+
+      resetPassword: async (phone, otp, newPassword) => {
+        await apiFetch("/auth/forgot-password/reset", {
+          method: "POST",
+          body: { phone, otp, new_password: newPassword },
+          auth: false,
+        });
+      },
+
+      changePhoneRequest: async (phone) => {
+        await apiFetch("/users/phone/change-request", {
+          method: "POST",
+          body: { phone },
+        });
+      },
+
+      changePhoneVerify: async (phone, otp) => {
+        const u = await apiFetch<FitXUser>("/users/phone/change-verify", {
+          method: "POST",
+          body: { phone, otp },
+        });
+        set({ user: u });
+        syncUserProps(u);
       },
 
       logout: async () => {
         track("logout");
         await clearToken();
+        await clearPreAuthToken();
         set({ user: null });
         syncUserProps(null);
       },

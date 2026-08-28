@@ -22,6 +22,7 @@ export default function Index() {
     if (loading) return;
     const delay = setTimeout(() => {
       if (!user) router.replace("/login");
+      else if (!user.is_phone_verified) router.replace("/verify-phone");
       else if (!user.onboarded) router.replace("/onboarding");
       else router.replace("/(tabs)/home");
     }, 800);

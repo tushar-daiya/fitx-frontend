@@ -22,16 +22,25 @@ export default function Signup() {
   const { signup } = useAuthStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const onSubmit = async () => {
-    if (!name || !email || password.length < 6)
-      return Alert.alert("Required", "Name, email, password (min 6 chars)");
+    if (!name || !email || !phone || password.length < 6)
+      return Alert.alert("Required", "Name, email, phone, password (min 6 chars)");
     setBusy(true);
     try {
-      await signup(email.trim(), password, name.trim());
-      router.replace("/onboarding");
+      const { phone: verifiedPhone } = await signup(
+        email.trim(),
+        phone.trim(),
+        password,
+        name.trim(),
+      );
+      router.replace({
+        pathname: "/verify-otp",
+        params: { phone: verifiedPhone, purpose: "signup" },
+      });
     } catch (e: any) {
       Alert.alert("Signup failed", e.message);
     } finally {
@@ -70,6 +79,21 @@ export default function Signup() {
               onChangeText={setEmail}
               style={styles.input}
             />
+            <View style={styles.phoneRow}>
+              <View style={styles.phonePrefix}>
+                <Text style={styles.phonePrefixText}>+91</Text>
+              </View>
+              <TextInput
+                testID="signup-phone"
+                placeholder="10-digit mobile number"
+                placeholderTextColor={COLORS.textMuted}
+                keyboardType="number-pad"
+                maxLength={10}
+                value={phone}
+                onChangeText={(v) => setPhone(v.replace(/[^0-9]/g, ""))}
+                style={styles.phoneInput}
+              />
+            </View>
             <TextInput
               testID="signup-password"
               placeholder="Password (min 6 chars)"
@@ -141,6 +165,29 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.body,
     fontSize: 16,
     marginBottom: SPACING.m,
+  },
+  phoneRow: { flexDirection: "row", marginBottom: SPACING.m },
+  phonePrefix: {
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  phonePrefixText: { color: COLORS.textPrimary, fontFamily: FONTS.bodyBold, fontSize: 16 },
+  phoneInput: {
+    flex: 1,
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: COLORS.textPrimary,
+    fontFamily: FONTS.body,
+    fontSize: 16,
   },
   primaryBtn: {
     backgroundColor: COLORS.goldPremium,
