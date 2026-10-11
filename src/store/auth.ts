@@ -28,6 +28,16 @@ async function syncAnalyticsId() {
   } catch {}
 }
 
+// Tell the backend which timezone this device is in, so "today" (meals, water,
+// steps, weigh-ins) starts at the user's local midnight. Best-effort.
+async function syncTimezone(u: FitXUser | null) {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz && u && u.timezone !== tz)
+      await apiFetch("/users/timezone", { method: "POST", body: { timezone: tz } });
+  } catch {}
+}
+
 function syncUserProps(u: FitXUser | null) {
   identifyUser(u ? String(u.id) : null, {
     goal: u?.profile?.goal ?? null,
@@ -81,6 +91,7 @@ async function completeSession(r: AuthResponse, method: string, isSignup: boolea
   await clearPreAuthToken();
   syncUserProps(r.user);
   syncAnalyticsId();
+  syncTimezone(r.user);
   if (isSignup) {
     track("sign_up", { method });
     AppEventsLogger.logEvent(AppEventsLogger.AppEvents.CompletedRegistration, {
@@ -105,6 +116,7 @@ export const useAuthStore = create<AuthState>()(
           const wasNull = get().user === null;
           set({ user: u, loading: false });
           syncUserProps(u);
+          syncTimezone(u);
           if (wasNull && u) {
             syncAnalyticsId();
             const { registerDevicePushToken } =

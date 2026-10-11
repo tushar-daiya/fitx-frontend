@@ -12,10 +12,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useWorkoutVideos } from "@/src/hooks/useWorkouts";
+import { useT } from "@/src/store/i18n";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 
 export default function Workouts() {
   const router = useRouter();
+  const t = useT();
   const [type, setType] = useState<"home" | "gym">("home");
   const { data: videos = [] } = useWorkoutVideos(type);
 
@@ -25,7 +27,7 @@ export default function Workouts() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Workout Videos</Text>
+        <Text style={styles.title}>{t("c.wk.title")}</Text>
         <View style={{ width: 28 }} />
       </View>
 
@@ -36,7 +38,7 @@ export default function Workouts() {
           onPress={() => setType("home")}
         >
           <Ionicons name="home" size={18} color={type === "home" ? COLORS.onAccent : COLORS.textSecondary} />
-          <Text style={[styles.tabText, type === "home" && styles.tabTextActive]}>HOME</Text>
+          <Text style={[styles.tabText, type === "home" && styles.tabTextActive]}>{t("c.wk.home")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           testID="tab-gym"
@@ -44,7 +46,7 @@ export default function Workouts() {
           onPress={() => setType("gym")}
         >
           <Ionicons name="barbell" size={18} color={type === "gym" ? COLORS.onAccent : COLORS.textSecondary} />
-          <Text style={[styles.tabText, type === "gym" && styles.tabTextActive]}>GYM</Text>
+          <Text style={[styles.tabText, type === "gym" && styles.tabTextActive]}>{t("c.wk.gym")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -66,14 +68,14 @@ export default function Workouts() {
                 <Text style={styles.metaTag}>
                   {v.muscle?.replace("_", " ").toUpperCase()}
                 </Text>
-                <Text style={styles.metaTag}>{v.level?.toUpperCase()}</Text>
-                <Text style={styles.metaTag}>{v.duration_min} MIN</Text>
+                <Text style={styles.metaTag}>{v.level ? (t("c.opt." + v.level) !== "c.opt." + v.level ? t("c.opt." + v.level) : v.level).toUpperCase() : undefined}</Text>
+                <Text style={styles.metaTag}>{t("c.wk.min").replace("{n}", String(v.duration_min))}</Text>
               </View>
             </View>
           </TouchableOpacity>
         ))}
         {videos.length === 0 && (
-          <Text style={styles.empty}>No videos yet for this filter.</Text>
+          <Text style={styles.empty}>{t("c.wk.empty")}</Text>
         )}
       </ScrollView>
     </SafeAreaView>

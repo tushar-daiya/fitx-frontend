@@ -17,24 +17,26 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
 import { AuthVideoBackground } from "@/src/AuthVideoBackground";
+import { useT } from "@/src/store/i18n";
 
 export default function ResetPassword() {
   const router = useRouter();
+  const t = useT();
   const params = useLocalSearchParams<{ phone: string; otp: string }>();
   const { resetPassword } = useAuthStore();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const onSubmit = async () => {
-    if (password.length < 6) return Alert.alert("Required", "Password must be at least 6 characters");
+    if (password.length < 6) return Alert.alert(t("a.required"), t("a.rp.min"));
     setBusy(true);
     try {
       await resetPassword(params.phone, params.otp, password);
-      Alert.alert("Password updated", "Sign in with your new password", [
-        { text: "OK", onPress: () => router.replace("/login") },
+      Alert.alert(t("a.rp.updated"), t("a.rp.updatedMsg"), [
+        { text: t("a.ok"), onPress: () => router.replace("/login") },
       ]);
     } catch (e: any) {
-      Alert.alert("Reset failed", e.message);
+      Alert.alert(t("a.rp.failed"), e.message);
     } finally {
       setBusy(false);
     }
@@ -47,12 +49,12 @@ export default function ResetPassword() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Logo size={96} style={styles.logoImg} />
           <View style={styles.card}>
-            <Text style={styles.heading}>Set a new password</Text>
-            <Text style={styles.sub}>Choose a new password for your account</Text>
+            <Text style={styles.heading}>{t("a.rp.heading")}</Text>
+            <Text style={styles.sub}>{t("a.rp.sub")}</Text>
 
             <TextInput
               testID="reset-password-input"
-              placeholder="New password (min 6 chars)"
+              placeholder={t("a.rp.ph")}
               placeholderTextColor={COLORS.textMuted}
               secureTextEntry
               value={password}
@@ -61,7 +63,7 @@ export default function ResetPassword() {
             />
 
             <TouchableOpacity testID="reset-password-submit" style={styles.primaryBtn} onPress={onSubmit} disabled={busy}>
-              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>UPDATE PASSWORD</Text>}
+              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>{t("a.rp.btn")}</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>

@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React, { useState } from "react";
 import {
   View,
@@ -13,10 +14,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   useDeleteMeal,
   useLogMeal,
+  useMealsForDay,
   useMealsToday,
   useUpdateMeal,
 } from "@/src/hooks/useMeals";
@@ -27,11 +29,19 @@ const MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 
 const EMPTY = { name: "", calories: "", protein: "", carbs: "", fats: "" };
 
+const fmtLong = (d: string) =>
+  new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+
 const num = (v: string) => (v.trim() === "" ? 0 : parseFloat(v));
 
 export default function LogMeal() {
+  const t = useT();
   const router = useRouter();
-  const today = useMealsToday();
+  // Opened from the food diary for a past day: log into / edit that day.
+  const { date } = useLocalSearchParams<{ date?: string }>();
+  const todayQ = useMealsToday();
+  const dayQ = useMealsForDay(date ?? "", !!date);
+  const today = date ? dayQ : todayQ;
   const logMeal = useLogMeal();
   const updateMeal = useUpdateMeal();
   const deleteMeal = useDeleteMeal();
@@ -68,12 +78,12 @@ export default function LogMeal() {
 
   const validate = () => {
     const e: typeof errors = {};
-    if (!form.name.trim()) e.name = "Enter what you ate";
+    if (!form.name.trim()) e.name = t("b.lm.enterName");
     const cal = parseFloat(form.calories);
-    if (isNaN(cal) || cal < 0 || cal > 20000) e.calories = "Calories must be between 0 and 20000";
-    for (const [k, label] of [["protein", "Protein"], ["carbs", "Carbs"], ["fats", "Fats"]] as const) {
+    if (isNaN(cal) || cal < 0 || cal > 20000) e.calories = t("b.lm.errCal");
+    for (const [k, label] of [["protein", "b.lm.errProtein"], ["carbs", "b.lm.errCarbs"], ["fats", "b.lm.errFats"]] as const) {
       const v = num(form[k]);
-      if (isNaN(v) || v < 0 || v > 2000) e[k] = `${label} must be between 0 and 2000 g`;
+      if (isNaN(v) || v < 0 || v > 2000) e[k] = t(label);
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -90,20 +100,20 @@ export default function LogMeal() {
       meal_type: mealType,
     };
     const done = reset;
-    const onError = (e: any) => Alert.alert("Couldn't save", e.message);
+    const onError = (e: any) => Alert.alert(t("b.lm.cantSave"), e.message);
     if (editing) updateMeal.mutate({ id: editing.id, ...body }, { onSuccess: done, onError });
-    else logMeal.mutate({ ...body, source: "manual" }, { onSuccess: done, onError });
+    else logMeal.mutate({ ...body, source: "manual", date }, { onSuccess: done, onError });
   };
 
   const onDelete = (m: MealLog) =>
-    Alert.alert("Delete meal?", m.name, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("b.lm.delQ"), m.name, [
+      { text: t("b.lm.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("b.lm.delete"),
         style: "destructive",
         onPress: () => {
           if (editing?.id === m.id) reset();
-          deleteMeal.mutate(m.id, { onError: (e: any) => Alert.alert("Couldn't delete", e.message) });
+          deleteMeal.mutate(m.id, { onError: (e: any) => Alert.alert(t("b.lm.cantDelete"), e.message) });
         },
       },
     ]);
@@ -118,36 +128,36 @@ export default function LogMeal() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Log Food</Text>
+        <Text style={styles.title}>{date ? fmtLong(date) : t("b.lm.title")}</Text>
         <View style={{ width: 28 }} />
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={styles.section}>{editing ? "EDIT ENTRY" : "WHAT DID YOU EAT?"}</Text>
-          <Field label="Food name" tid="manual-name" value={form.name} onChange={set("name", false)} error={errors.name} placeholder="e.g. 2 rotis with dal" keyboard="default" />
-          <Field label="Calories (kcal)" tid="manual-calories" value={form.calories} onChange={set("calories")} error={errors.calories} placeholder="e.g. 350" />
+          <Text style={styles.section}>{editing ? t("b.lm.edit") : date ? t("b.lm.addDay") : t("b.lm.what")}</Text>
+          <Field label={t("b.lm.foodName")} tid="manual-name" value={form.name} onChange={set("name", false)} error={errors.name} placeholder={t("b.lm.foodPh")} keyboard="default" />
+          <Field label={t("b.lm.cal")} tid="manual-calories" value={form.calories} onChange={set("calories")} error={errors.calories} placeholder={t("b.lm.calPh")} />
           <View style={styles.macroRow}>
             <View style={{ flex: 1 }}>
-              <Field label="Protein (g)" tid="manual-protein" value={form.protein} onChange={set("protein")} error={errors.protein} placeholder="0" />
+              <Field label={t("b.lm.protein")} tid="manual-protein" value={form.protein} onChange={set("protein")} error={errors.protein} placeholder="0" />
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Carbs (g)" tid="manual-carbs" value={form.carbs} onChange={set("carbs")} error={errors.carbs} placeholder="0" />
+              <Field label={t("b.lm.carbs")} tid="manual-carbs" value={form.carbs} onChange={set("carbs")} error={errors.carbs} placeholder="0" />
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Fats (g)" tid="manual-fats" value={form.fats} onChange={set("fats")} error={errors.fats} placeholder="0" />
+              <Field label={t("b.lm.fats")} tid="manual-fats" value={form.fats} onChange={set("fats")} error={errors.fats} placeholder="0" />
             </View>
           </View>
 
-          <Text style={styles.fieldLabel}>Meal</Text>
+          <Text style={styles.fieldLabel}>{t("b.lm.meal")}</Text>
           <View style={styles.chips}>
-            {MEAL_TYPES.map((t) => (
+            {MEAL_TYPES.map((mt) => (
               <TouchableOpacity
-                key={t}
-                testID={`manual-type-${t}`}
-                onPress={() => setMealType(t)}
-                style={[styles.chip, mealType === t && styles.chipActive]}
+                key={mt}
+                testID={`manual-type-${mt}`}
+                onPress={() => setMealType(mt)}
+                style={[styles.chip, mealType === mt && styles.chipActive]}
               >
-                <Text style={[styles.chipText, mealType === t && styles.chipTextActive]}>{t}</Text>
+                <Text style={[styles.chipText, mealType === mt && styles.chipTextActive]}>{t(`b.meal.${mt}`)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -156,30 +166,30 @@ export default function LogMeal() {
             {busy ? (
               <ActivityIndicator color={COLORS.onAccent} />
             ) : (
-              <Text style={styles.primaryText}>{editing ? "SAVE CHANGES" : "ADD TO TODAY"}</Text>
+              <Text style={styles.primaryText}>{editing ? t("b.lm.saveChanges") : date ? t("b.lm.addMeal") : t("b.lm.addToday")}</Text>
             )}
           </TouchableOpacity>
           {editing && (
             <TouchableOpacity onPress={reset} style={{ alignItems: "center", marginTop: 12 }}>
-              <Text style={{ color: COLORS.textSecondary, fontFamily: FONTS.bodyBold }}>Cancel editing</Text>
+              <Text style={{ color: COLORS.textSecondary, fontFamily: FONTS.bodyBold }}>{t("b.lm.cancelEdit")}</Text>
             </TouchableOpacity>
           )}
 
           <Text style={[styles.section, { marginTop: 28 }]}>
-            TODAY'S MEALS{totals ? ` · ${Math.round(totals.calories)} KCAL` : ""}
+            {date ? t("b.lm.meals") : t("b.lm.todayMeals")}{totals ? ` · ${Math.round(totals.calories)} KCAL` : ""}
           </Text>
           {today.isLoading ? (
             <ActivityIndicator color={COLORS.goldPremium} />
           ) : meals.length === 0 ? (
-            <Text style={styles.empty}>Nothing logged yet today.</Text>
+            <Text style={styles.empty}>{t("b.lm.none")}</Text>
           ) : (
             meals.map((m) => (
               <TouchableOpacity key={m.id} testID={`meal-${m.id}`} style={styles.meal} onPress={() => startEdit(m)}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.mealName} numberOfLines={1}>{m.name}</Text>
                   <Text style={styles.mealSub}>
-                    {m.meal_type} · P {Math.round(m.protein_g)}g · C {Math.round(m.carbs_g)}g · F {Math.round(m.fats_g)}g
-                    {m.source === "manual" ? " · manual" : ""}
+                    {t(`b.meal.${m.meal_type}`)} · P {Math.round(m.protein_g)}g · C {Math.round(m.carbs_g)}g · F {Math.round(m.fats_g)}g
+                    {m.source === "manual" ? ` · ${t("b.meal.manual")}` : ""}
                   </Text>
                 </View>
                 <Text style={styles.mealCal}>{Math.round(m.calories)}</Text>

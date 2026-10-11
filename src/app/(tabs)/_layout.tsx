@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,6 +7,7 @@ import { COLORS, FONTS } from "@/src/theme";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   return (
     <Tabs
       screenOptions={{
@@ -27,28 +29,28 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("b.tab.home"),
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="plans"
         options={{
-          title: "Plans",
+          title: t("b.tab.plans"),
           tabBarIcon: ({ color, size }) => <Ionicons name="barbell" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
-          title: "Scan",
+          title: t("b.tab.scan"),
           tabBarIcon: ({ color, size }) => <Ionicons name="scan-circle" size={size + 6} color={color} />,
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          title: "Coach",
+          title: t("b.tab.coach"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
@@ -57,7 +59,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("b.tab.profile"),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" size={size} color={color} />,
         }}
       />

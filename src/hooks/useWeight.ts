@@ -21,17 +21,13 @@ const useAfterWeightChange = () => {
   };
 };
 
-/** Local calendar date as YYYY-MM-DD (the server's clock is UTC). */
-export const localDate = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
 export const useLogWeight = () => {
   const after = useAfterWeightChange();
   return useMutation({
     mutationFn: (weight_kg: number) =>
       apiFetch<WeightEntry>("/weight/log", {
         method: "POST",
-        body: { weight_kg, date: localDate() },
+        body: { weight_kg },
       }),
     onSuccess: after,
   });

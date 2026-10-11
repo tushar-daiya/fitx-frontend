@@ -54,3 +54,5 @@ coverage/
 example
 *.apk
 *.aab
+# local release bundles
+build-output/

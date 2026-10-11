@@ -16,10 +16,12 @@ import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 import { useGyms } from "@/src/hooks/useGyms";
 import type { Gym } from "@/src/types/api";
+import { useT } from "@/src/store/i18n";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function GymsNearby() {
   const router = useRouter();
+  const t = useT();
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [denied, setDenied] = useState(false);
   const [locErr, setLocErr] = useState<string | null>(null);
@@ -38,13 +40,13 @@ export default function GymsNearby() {
       if (perm.status !== "granted") {
         if (!perm.canAskAgain) {
           setDenied(true);
-          setLocErr("Location access denied. Please enable it from Settings.");
+          setLocErr("c.gym.err_denied");
           return;
         }
         perm = await Location.requestForegroundPermissionsAsync();
         if (perm.status !== "granted") {
           setDenied(!perm.canAskAgain);
-          setLocErr("Location permission is required to find gyms near you.");
+          setLocErr("c.gym.err_perm");
           return;
         }
       }
@@ -53,7 +55,7 @@ export default function GymsNearby() {
       });
       setCoords({ lat: loc.coords.latitude, lon: loc.coords.longitude });
     } catch (e: any) {
-      setLocErr(e.message || "Could not get location");
+      setLocErr(e.message || "c.gym.err_loc");
     } finally {
       setLocBusy(false);
     }
@@ -82,7 +84,7 @@ export default function GymsNearby() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Gyms Near You</Text>
+        <Text style={styles.title}>{t("c.gym.title")}</Text>
         <TouchableOpacity onPress={search} disabled={busy}>
           <Ionicons name="refresh" size={22} color={busy ? COLORS.textMuted : COLORS.goldPremium} />
         </TouchableOpacity>
@@ -91,25 +93,25 @@ export default function GymsNearby() {
       {busy && (
         <View style={styles.center}>
           <ActivityIndicator color={COLORS.goldPremium} size="large" />
-          <Text style={styles.loadingText}>Finding gyms around you...</Text>
+          <Text style={styles.loadingText}>{t("c.gym.finding")}</Text>
         </View>
       )}
 
       {!busy && err && (
         <View style={styles.center}>
           <Ionicons name="location-outline" size={48} color={COLORS.textMuted} />
-          <Text style={styles.errTitle}>Location needed</Text>
-          <Text style={styles.errText}>{err}</Text>
+          <Text style={styles.errTitle}>{t("c.gym.loc_needed")}</Text>
+          <Text style={styles.errText}>{err.startsWith("c.gym.") ? t(err) : err}</Text>
           {denied ? (
             <TouchableOpacity
               style={styles.primaryBtn}
               onPress={() => Linking.openSettings()}
             >
-              <Text style={styles.primaryBtnText}>OPEN SETTINGS</Text>
+              <Text style={styles.primaryBtnText}>{t("c.gym.open_settings")}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.primaryBtn} onPress={search}>
-              <Text style={styles.primaryBtnText}>TRY AGAIN</Text>
+              <Text style={styles.primaryBtnText}>{t("c.gym.try_again")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -118,15 +120,15 @@ export default function GymsNearby() {
       {!busy && !err && gyms.length === 0 && (
         <View style={styles.center}>
           <Ionicons name="barbell-outline" size={48} color={COLORS.textMuted} />
-          <Text style={styles.errTitle}>No gyms within 5 km</Text>
-          <Text style={styles.errText}>Try a different location or check back later.</Text>
+          <Text style={styles.errTitle}>{t("c.gym.none")}</Text>
+          <Text style={styles.errText}>{t("c.gym.none_sub")}</Text>
         </View>
       )}
 
       {!busy && gyms.length > 0 && (
         <ScrollView contentContainerStyle={styles.list}>
           <Text style={styles.subhead}>
-            {gyms.length} {gyms.length === 1 ? "gym" : "gyms"} within 5 km
+            {t(gyms.length === 1 ? "c.gym.count_one" : "c.gym.count_many").replace("{n}", String(gyms.length))}
           </Text>
           {gyms.map((g, i) => (
             <View key={`${g.lat}-${g.lon}-${i}`} style={styles.card} testID={`gym-${i}`}>
@@ -136,7 +138,7 @@ export default function GymsNearby() {
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.gymName}>{g.name}</Text>
-                  <Text style={styles.gymDist}>{(g.distance_m / 1000).toFixed(2)} km away</Text>
+                  <Text style={styles.gymDist}>{t("c.gym.away").replace("{d}", (g.distance_m / 1000).toFixed(2))}</Text>
                 </View>
               </View>
               {g.address && <Text style={styles.gymAddr}>{g.address}</Text>}
@@ -146,12 +148,12 @@ export default function GymsNearby() {
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => openMap(g)}>
                   <Ionicons name="navigate" size={16} color={COLORS.goldPremium} />
-                  <Text style={styles.actionText}>Directions</Text>
+                  <Text style={styles.actionText}>{t("c.gym.directions")}</Text>
                 </TouchableOpacity>
                 {g.phone && (
                   <TouchableOpacity style={styles.actionBtn} onPress={() => call(g.phone!)}>
                     <Ionicons name="call" size={16} color={COLORS.goldPremium} />
-                    <Text style={styles.actionText}>Call</Text>
+                    <Text style={styles.actionText}>{t("c.gym.call")}</Text>
                   </TouchableOpacity>
                 )}
                 {g.website && (
@@ -160,13 +162,13 @@ export default function GymsNearby() {
                     onPress={() => Linking.openURL(g.website!)}
                   >
                     <Ionicons name="globe" size={16} color={COLORS.goldPremium} />
-                    <Text style={styles.actionText}>Website</Text>
+                    <Text style={styles.actionText}>{t("c.gym.website")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
             </View>
           ))}
-          <Text style={styles.footer}>Powered by OpenStreetMap · Free community data</Text>
+          <Text style={styles.footer}>{t("c.gym.powered")}</Text>
         </ScrollView>
       )}
     </SafeAreaView>

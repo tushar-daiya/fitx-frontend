@@ -2,9 +2,15 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import * as auth from "@/src/i18n/auth";
+import * as main from "@/src/i18n/main";
+import * as more from "@/src/i18n/more";
+
 export type Lang = "en" | "hi";
 
-const DICT: Record<Lang, Record<string, string>> = {
+// Legacy keys live below; per-screen-group dictionaries in src/i18n/ are merged
+// on top (group keys are prefixed so they can't collide).
+const BASE: Record<Lang, Record<string, string>> = {
   en: {
     "app.tagline": "Elevate Your Fitness Journey",
     "auth.welcome": "Welcome back",
@@ -167,6 +173,11 @@ const DICT: Record<Lang, Record<string, string>> = {
   },
 };
 
+const DICT: Record<Lang, Record<string, string>> = {
+  en: { ...BASE.en, ...auth.en, ...main.en, ...more.en },
+  hi: { ...BASE.hi, ...auth.hi, ...main.hi, ...more.hi },
+};
+
 type I18nState = {
   lang: Lang;
   t: (key: string) => string;
@@ -183,3 +194,13 @@ export const useI18nStore = create<I18nState>()(
     { name: "fitx-lang", storage: createJSONStorage(() => AsyncStorage) }
   )
 );
+
+/**
+ * Translate hook for components. Subscribing to `lang` makes the component
+ * re-render when the language changes (the `t` function itself is stable, so
+ * selecting only `s.t` would not).
+ */
+export const useT = () => {
+  useI18nStore((s) => s.lang);
+  return useI18nStore.getState().t;
+};

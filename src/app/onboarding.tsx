@@ -18,6 +18,7 @@ import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
 import { track } from "@/src/lib/analytics";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
+import { useT } from "@/src/store/i18n";
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -33,21 +34,21 @@ type OnboardingBody = {
 };
 
 const GOALS = [
-  { id: "fat_loss", label: "Fat Loss" },
-  { id: "lean_bulk", label: "Lean Bulk" },
-  { id: "body_recomp", label: "Body Recomp" },
+  { id: "fat_loss", label: "a.onb.opt.fat_loss" },
+  { id: "lean_bulk", label: "a.onb.opt.lean_bulk" },
+  { id: "body_recomp", label: "a.onb.opt.body_recomp" },
 ];
 const LEVELS = [
-  { id: "beginner", label: "Beginner" },
-  { id: "intermediate", label: "Intermediate" },
-  { id: "advanced", label: "Advanced" },
+  { id: "beginner", label: "a.onb.opt.beginner" },
+  { id: "intermediate", label: "a.onb.opt.intermediate" },
+  { id: "advanced", label: "a.onb.opt.advanced" },
 ];
 const DIETS = [
-  { id: "veg", label: "Vegetarian" },
-  { id: "non_veg", label: "Non-Vegetarian" },
-  { id: "eggetarian", label: "Eggetarian" },
-  { id: "vegan", label: "Vegan" },
-  { id: "jain", label: "Jain" },
+  { id: "veg", label: "a.onb.opt.veg" },
+  { id: "non_veg", label: "a.onb.opt.non_veg" },
+  { id: "eggetarian", label: "a.onb.opt.eggetarian" },
+  { id: "vegan", label: "a.onb.opt.vegan" },
+  { id: "jain", label: "a.onb.opt.jain" },
 ];
 
 const LIMITS = {
@@ -60,19 +61,21 @@ const LIMITS = {
 function numErr(
   raw: string,
   key: keyof typeof LIMITS,
-  label: string
+  label: string,
+  t: (k: string) => string
 ): string | null {
   const v = parseFloat(raw);
-  if (!raw.trim() || isNaN(v)) return `${label} is required`;
+  if (!raw.trim() || isNaN(v)) return t("a.onb.req").replace("{label}", label);
   const { min, max, unit } = LIMITS[key];
   if (v < min || v > max)
-    return `${label} must be between ${min} and ${max} ${unit}`;
+    return t("a.onb.range").replace("{label}", label).replace("{min}", String(min)).replace("{max}", String(max)).replace("{unit}", t(`a.onb.unit.${unit}`));
   return null;
 }
 
 export default function Onboarding() {
   const router = useRouter();
   const { refresh } = useAuthStore();
+  const t = useT();
   const [step, setStep] = useState<Step>(0);
   const [gender, setGender] = useState<"male" | "female" | "other">("male");
   const [age, setAge] = useState("25");
@@ -94,24 +97,24 @@ export default function Onboarding() {
       // (first-run mode) to start the free trial or buy any plan directly.
       router.replace({ pathname: "/subscription", params: { firstRun: "1" } } as any);
     },
-    onError: (e: any) => Alert.alert("Error", e.message),
+    onError: (e: any) => Alert.alert(t("a.error"), e.message),
   });
 
   const validateStep = (): boolean => {
     let e: string | null = null;
-    if (step === 1) e = numErr(age, "age", "Age");
-    if (step === 2) e = numErr(height, "height", "Height");
+    if (step === 1) e = numErr(age, "age", t("a.onb.age"), t);
+    if (step === 2) e = numErr(height, "height", t("a.onb.height"), t);
     if (step === 3) {
-      e = numErr(weight, "weight", "Current weight");
-      if (!e) e = numErr(target, "target", "Target weight");
+      e = numErr(weight, "weight", t("a.onb.curW"), t);
+      if (!e) e = numErr(target, "target", t("a.onb.tgtW"), t);
     }
     if (step === 4) {
       const w = parseFloat(weight);
-      const t = parseFloat(target);
-      if (goal === "fat_loss" && t >= w)
-        e = "Target weight should be less than current weight for fat loss";
-      if (goal === "lean_bulk" && t <= w)
-        e = "Target weight should be greater than current weight for lean bulk";
+      const tw = parseFloat(target);
+      if (goal === "fat_loss" && tw >= w)
+        e = t("a.onb.errLoss");
+      if (goal === "lean_bulk" && tw <= w)
+        e = t("a.onb.errBulk");
     }
     setErr(e);
     return e === null;
@@ -204,13 +207,13 @@ export default function Onboarding() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {step === 0 && (
             <View>
-              <Text style={styles.q}>What's your gender?</Text>
-              <Text style={styles.qSub}>Helps us personalize your plan</Text>
+              <Text style={styles.q}>{t("a.onb.q0")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s0")}</Text>
               {(["male", "female", "other"] as const).map((g) => (
                 <Option
                   key={g}
                   tid={`onb-gender-${g}`}
-                  label={g.charAt(0).toUpperCase() + g.slice(1)}
+                  label={t(`a.onb.gender.${g}`)}
                   active={gender === g}
                   onPress={() => setGender(g)}
                 />
@@ -220,22 +223,22 @@ export default function Onboarding() {
 
           {step === 1 && (
             <View>
-              <Text style={styles.q}>How old are you?</Text>
-              <Text style={styles.qSub}>Enter your age in years</Text>
+              <Text style={styles.q}>{t("a.onb.q1")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s1")}</Text>
               <NumField
                 testID="onb-age"
                 value={age}
                 onChange={setAge}
                 placeholder="25"
-                hint={`${LIMITS.age.min}–${LIMITS.age.max} years`}
+                hint={`${LIMITS.age.min}–${LIMITS.age.max} ${t("a.onb.unit.years")}`}
               />
             </View>
           )}
 
           {step === 2 && (
             <View>
-              <Text style={styles.q}>Your height?</Text>
-              <Text style={styles.qSub}>In centimeters</Text>
+              <Text style={styles.q}>{t("a.onb.q2")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s2")}</Text>
               <NumField
                 testID="onb-height"
                 value={height}
@@ -248,14 +251,14 @@ export default function Onboarding() {
 
           {step === 3 && (
             <View>
-              <Text style={styles.q}>Your weight?</Text>
-              <Text style={styles.qSub}>We'll track your progress over time</Text>
+              <Text style={styles.q}>{t("a.onb.q3")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s3")}</Text>
               <NumField
                 testID="onb-weight"
                 value={weight}
                 onChange={setWeight}
                 placeholder="75"
-                label="Current weight (kg)"
+                label={t("a.onb.curWkg")}
                 hint={`${LIMITS.weight.min}–${LIMITS.weight.max} kg`}
               />
               <NumField
@@ -263,7 +266,7 @@ export default function Onboarding() {
                 value={target}
                 onChange={setTarget}
                 placeholder="70"
-                label="Target weight (kg)"
+                label={t("a.onb.tgtWkg")}
                 hint={`${LIMITS.target.min}–${LIMITS.target.max} kg`}
               />
             </View>
@@ -271,13 +274,13 @@ export default function Onboarding() {
 
           {step === 4 && (
             <View>
-              <Text style={styles.q}>Your goal?</Text>
-              <Text style={styles.qSub}>What do you want to achieve</Text>
+              <Text style={styles.q}>{t("a.onb.q4")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s4")}</Text>
               {GOALS.map((g) => (
                 <Option
                   key={g.id}
                   tid={`onb-goal-${g.id}`}
-                  label={g.label}
+                  label={t(g.label)}
                   active={goal === g.id}
                   onPress={() => setGoal(g.id)}
                 />
@@ -287,13 +290,13 @@ export default function Onboarding() {
 
           {step === 5 && (
             <View>
-              <Text style={styles.q}>Fitness level?</Text>
-              <Text style={styles.qSub}>Your training experience</Text>
+              <Text style={styles.q}>{t("a.onb.q5")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s5")}</Text>
               {LEVELS.map((l) => (
                 <Option
                   key={l.id}
                   tid={`onb-level-${l.id}`}
-                  label={l.label}
+                  label={t(l.label)}
                   active={level === l.id}
                   onPress={() => setLevel(l.id)}
                 />
@@ -303,13 +306,13 @@ export default function Onboarding() {
 
           {step === 6 && (
             <View>
-              <Text style={styles.q}>Diet preference?</Text>
-              <Text style={styles.qSub}>We'll personalize meals for you</Text>
+              <Text style={styles.q}>{t("a.onb.q6")}</Text>
+              <Text style={styles.qSub}>{t("a.onb.s6")}</Text>
               {DIETS.map((d) => (
                 <Option
                   key={d.id}
                   tid={`onb-diet-${d.id}`}
-                  label={d.label}
+                  label={t(d.label)}
                   active={diet === d.id}
                   onPress={() => setDiet(d.id)}
                 />
@@ -328,12 +331,12 @@ export default function Onboarding() {
           <View style={styles.footer}>
             {step > 0 && (
               <TouchableOpacity testID="onb-back" onPress={back} style={styles.backBtn}>
-                <Text style={styles.backBtnText}>BACK</Text>
+                <Text style={styles.backBtnText}>{t("a.onb.back")}</Text>
               </TouchableOpacity>
             )}
             {step < 6 ? (
               <TouchableOpacity testID="onb-next" onPress={next} style={styles.primaryBtn}>
-                <Text style={styles.primaryBtnText}>CONTINUE</Text>
+                <Text style={styles.primaryBtnText}>{t("a.onb.continue")}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -345,7 +348,7 @@ export default function Onboarding() {
                 {onboard.isPending ? (
                   <ActivityIndicator color={COLORS.onAccent} />
                 ) : (
-                  <Text style={styles.primaryBtnText}>FINISH</Text>
+                  <Text style={styles.primaryBtnText}>{t("a.onb.finish")}</Text>
                 )}
               </TouchableOpacity>
             )}

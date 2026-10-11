@@ -24,6 +24,10 @@ export type FitXUser = {
   trial_used: boolean;
   // Absent on accounts that predate the flag, which count as opted in.
   marketing_opt_in?: boolean;
+  /** Automatic reminders; absent counts as on. */
+  reminders_enabled?: boolean;
+  /** IANA timezone reported by the device, e.g. "Asia/Kolkata". */
+  timezone?: string;
   created_at: string;
 };
 
@@ -189,6 +193,8 @@ export type MealTotals = {
 export type MealsToday = {
   meals: MealLog[];
   totals: MealTotals;
+  /** Daily calorie goal from the user's current profile. */
+  target_calories?: number | null;
 };
 
 export type ScanResult = {
@@ -371,4 +377,21 @@ export type WeightHistory = {
   start_weight_kg: number | null;
   current_weight_kg: number | null;
   target_weight_kg: number | null;
+};
+
+// ── Food diary ────────────────────────────────────────────────────────────
+export type DayNutrition = {
+  date: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fats_g: number;
+  meals: number;
+};
+
+export type MealsHistory = {
+  /** The server's date; meals are dated by it, so anchor the diary on this. */
+  today: string;
+  target_calories: number | null;
+  days: DayNutrition[];
 };

@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React, { useState } from "react";
 import {
   View,
@@ -18,6 +19,7 @@ import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import type { ScanResult } from "@/src/types/api";
 
 export default function Scan() {
+  const t = useT();
   const router = useRouter();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageB64, setImageB64] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function Scan() {
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert("Permission required", "Please enable access to continue");
+      Alert.alert(t("b.scan.perm"), t("b.scan.permMsg"));
       return;
     }
     const r = fromCamera
@@ -52,10 +54,10 @@ export default function Scan() {
   };
 
   const scan = () => {
-    if (!imageB64) return Alert.alert("Pick or take a meal photo first");
+    if (!imageB64) return Alert.alert(t("b.scan.pickFirst"));
     scanMeal.mutate(imageB64, {
       onSuccess: setResult,
-      onError: (e: any) => Alert.alert("Scan failed", e.message),
+      onError: (e: any) => Alert.alert(t("b.scan.failed"), e.message),
     });
   };
 
@@ -72,12 +74,12 @@ export default function Scan() {
       },
       {
         onSuccess: () => {
-          Alert.alert("Logged!", `${result.name} added to today's meals`);
+          Alert.alert(t("b.scan.logged"), t("b.scan.added").replace("{name}", result.name));
           setResult(null);
           setImageUri(null);
           setImageB64(null);
         },
-        onError: (e: any) => Alert.alert("Log failed", e.message),
+        onError: (e: any) => Alert.alert(t("b.scan.logFailed"), e.message),
       }
     );
   };
@@ -85,8 +87,8 @@ export default function Scan() {
   return (
     <SafeAreaView style={styles.container} testID="scan-screen" edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Scan Meal</Text>
-        <Text style={styles.sub}>Snap your meal · AI estimates calories & macros</Text>
+        <Text style={styles.title}>{t("b.scan.title")}</Text>
+        <Text style={styles.sub}>{t("b.scan.sub")}</Text>
 
         <View style={styles.preview}>
           {imageUri ? (
@@ -94,7 +96,7 @@ export default function Scan() {
           ) : (
             <View style={styles.placeholder}>
               <Ionicons name="camera-outline" size={64} color={COLORS.goldMuted} />
-              <Text style={styles.placeholderText}>No image selected</Text>
+              <Text style={styles.placeholderText}>{t("b.scan.noImage")}</Text>
             </View>
           )}
         </View>
@@ -106,7 +108,7 @@ export default function Scan() {
             onPress={() => pick(true)}
           >
             <Ionicons name="camera" size={20} color={COLORS.goldPremium} />
-            <Text style={styles.actionBtnAltText}>CAMERA</Text>
+            <Text style={styles.actionBtnAltText}>{t("b.scan.camera")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="gallery-btn"
@@ -114,7 +116,7 @@ export default function Scan() {
             onPress={() => pick(false)}
           >
             <Ionicons name="images" size={20} color={COLORS.goldPremium} />
-            <Text style={styles.actionBtnAltText}>GALLERY</Text>
+            <Text style={styles.actionBtnAltText}>{t("b.scan.gallery")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -124,7 +126,7 @@ export default function Scan() {
           onPress={() => router.push("/log-meal" as any)}
         >
           <Ionicons name="create-outline" size={18} color={COLORS.goldPremium} />
-          <Text style={styles.manualLinkText}>Enter calories manually</Text>
+          <Text style={styles.manualLinkText}>{t("b.scan.manual")}</Text>
         </TouchableOpacity>
 
         {imageUri && !result && (
@@ -137,7 +139,7 @@ export default function Scan() {
             {scanMeal.isPending ? (
               <ActivityIndicator color={COLORS.onAccent} />
             ) : (
-              <Text style={styles.primaryText}>ANALYZE WITH AI</Text>
+              <Text style={styles.primaryText}>{t("b.scan.analyze")}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -147,10 +149,10 @@ export default function Scan() {
             <Text style={styles.resultName}>{result.name}</Text>
             <Text style={styles.resultPortion}>{result.portion}</Text>
             <View style={styles.macroGrid}>
-              <Mac label="KCAL" value={result.calories} />
-              <Mac label="PROTEIN" value={`${result.protein_g}g`} />
-              <Mac label="CARBS" value={`${result.carbs_g}g`} />
-              <Mac label="FATS" value={`${result.fats_g}g`} />
+              <Mac label={t("b.scan.kcal")} value={result.calories} />
+              <Mac label={t("b.scan.protein")} value={`${result.protein_g}g`} />
+              <Mac label={t("b.scan.carbs")} value={`${result.carbs_g}g`} />
+              <Mac label={t("b.scan.fats")} value={`${result.fats_g}g`} />
             </View>
             {result.notes && <Text style={styles.notes}>💡 {result.notes}</Text>}
             <TouchableOpacity
@@ -162,7 +164,7 @@ export default function Scan() {
               {logMeal.isPending ? (
                 <ActivityIndicator color={COLORS.onAccent} />
               ) : (
-                <Text style={styles.primaryText}>LOG THIS MEAL</Text>
+                <Text style={styles.primaryText}>{t("b.scan.logThis")}</Text>
               )}
             </TouchableOpacity>
           </View>

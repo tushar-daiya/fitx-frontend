@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -68,6 +69,7 @@ const QUICK_ACTIONS: {
 ];
 
 export default function Chat() {
+  const t = useT();
   const [headerHeight, setHeaderHeight] = useState(80);
   const behaviour = useKeyboardBehavior();
 
@@ -79,8 +81,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
-      content:
-        "Hey! I'm your FitX Coach 💪 Ask me anything about workouts, nutrition, recipes, or recovery. (I don't give medical advice.)",
+      content: t("b.chat.greet"),
     },
   ]);
   const [input, setInput] = useState("");
@@ -145,8 +146,8 @@ export default function Chat() {
         style={styles.header}
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
       >
-        <Text style={styles.title}>FitX Coach</Text>
-        <Text style={styles.sub}>AI assistant · fitness & nutrition only</Text>
+        <Text style={styles.title}>{t("b.chat.title")}</Text>
+        <Text style={styles.sub}>{t("b.chat.sub")}</Text>
       </View>
 
       {/* <KeyboardAvoidingView
@@ -216,8 +217,8 @@ export default function Chat() {
                   />
                 </View>
                 <View style={styles.suggestionTextWrap}>
-                  <Text style={styles.suggestionTitle}>{a.label}</Text>
-                  <Text style={styles.suggestionSub}>{a.sub}</Text>
+                  <Text style={styles.suggestionTitle}>{t(`b.chat.qa${i}.label`)}</Text>
+                  <Text style={styles.suggestionSub}>{t(`b.chat.qa${i}.sub`)}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -230,7 +231,7 @@ export default function Chat() {
             testID="chat-input"
             value={input}
             onChangeText={setInput}
-            placeholder="Ask FitX Coach anything..."
+            placeholder={t("b.chat.ph")}
             placeholderTextColor={COLORS.textMuted}
             style={styles.input}
             onSubmitEditing={() => send()}

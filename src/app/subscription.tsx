@@ -7,6 +7,7 @@ import {
 import { track } from "@/src/lib/analytics";
 import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
+import { useT } from "@/src/store/i18n";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import type { PaymentOrder } from "@/src/types/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,10 +46,10 @@ const usdPrice = (p: any): number | undefined =>
   p?.price_usd ?? USD_PRICES[p?.id];
 
 const DEFAULT_PERKS = [
-  "AI-personalised workout & diet plans",
-  "Unlimited meal photo scans",
-  "Your 24/7 AI fitness coach",
-  "Full recipe library",
+  "c.sub.perk1",
+  "c.sub.perk2",
+  "c.sub.perk3",
+  "c.sub.perk4",
 ];
 
 function fmtDate(iso: string): string {
@@ -103,6 +104,7 @@ function buildRazorpayHtml(order: PaymentOrder): string {
 
 export default function Subscription() {
   const router = useRouter();
+  const t = useT();
   const { refresh } = useAuthStore();
   const { firstRun: firstRunParam } = useLocalSearchParams<{ firstRun?: string }>();
   const firstRun = firstRunParam === "1";
@@ -179,7 +181,7 @@ export default function Subscription() {
       },
       onError: (e: any) => {
         track("trial_failed", { plan: "trial", reason: e?.message });
-        Alert.alert("Error", e.message);
+        Alert.alert(t("c.error"), e.message);
       },
     });
   };
@@ -210,7 +212,7 @@ export default function Subscription() {
             stage: "create_order",
             reason: e?.message,
           });
-          Alert.alert("Error", e.message);
+          Alert.alert(t("c.error"), e.message);
         },
       },
     );
@@ -223,11 +225,11 @@ export default function Subscription() {
       await refresh();
       refetchStatus();
       Alert.alert(
-        "Plan Activated",
-        `Your ${planLabel(sub.plan, plans)} plan is now active.`,
+        t("c.sub.activated"),
+        t("c.sub.activated_msg").replace("{plan}", planLabel(sub.plan, plans)),
       );
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert(t("c.error"), e.message);
     } finally {
       setActivatingId(null);
     }
@@ -239,20 +241,20 @@ export default function Subscription() {
   };
 
   const displayPrice = (p: any) => {
-    if (p.price === 0) return "FREE";
+    if (p.price === 0) return t("c.sub.free");
     if (region === "in") return `₹${p.price}`;
     return `$${usdPrice(p) ?? "—"}`;
   };
 
   const ctaLabel = () => {
-    if (!selected) return "LOADING…";
+    if (!selected) return t("c.sub.loading");
     const plan = plans.find((p) => p.id === selected);
-    if (isTrialPlan(plan)) return "START FREE TRIAL";
-    if (!plan) return "PROCEED TO PAY";
+    if (isTrialPlan(plan)) return t("c.sub.start_trial");
+    if (!plan) return t("c.sub.proceed");
     const queued = queuedPlanIds.has(selected);
     return queued
-      ? `${plan.label.toUpperCase()} ALREADY QUEUED`
-      : `PAY ${displayPrice(plan)}`;
+      ? t("c.sub.already_queued").replace("{plan}", plan.label.toUpperCase())
+      : t("c.sub.pay").replace("{price}", displayPrice(plan));
   };
 
   const ctaDisabled =
@@ -275,21 +277,21 @@ export default function Subscription() {
             <Ionicons name="chevron-back" size={26} color={COLORS.textPrimary} />
           </TouchableOpacity>
         )}
-        <Text style={styles.headerTitle}>{firstRun ? "Choose your plan" : "Subscription"}</Text>
+        <Text style={styles.headerTitle}>{firstRun ? t("c.sub.choose_plan") : t("c.sub.subscription")}</Text>
         <View style={{ width: 26 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>{firstRun ? "You're all set!" : "Your Plans"}</Text>
+        <Text style={styles.title}>{firstRun ? t("c.sub.all_set") : t("c.sub.your_plans")}</Text>
         <Text style={styles.sub}>
           {trialPlan
-            ? `${trialDays}-day free trial. Premium features include AI plans, meal scanner & coach.`
-            : "Premium features include AI plans, meal scanner & coach."}
+            ? t("c.sub.sub_trial").replace("{n}", String(trialDays))
+            : t("c.sub.sub_plain")}
         </Text>
 
         {status?.active_plans && status.active_plans.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ACTIVE</Text>
+            <Text style={styles.sectionTitle}>{t("c.sub.active")}</Text>
             {status.active_plans.map((s) => (
               <ActivePlanCard key={s.id} sub={s} plans={plans} />
             ))}
@@ -298,7 +300,7 @@ export default function Subscription() {
 
         {status?.upcoming_plans && status.upcoming_plans.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>UPCOMING</Text>
+            <Text style={styles.sectionTitle}>{t("c.sub.upcoming")}</Text>
             {status.upcoming_plans.map((s) => (
               <UpcomingPlanCard
                 key={s.id}
@@ -318,8 +320,7 @@ export default function Subscription() {
             <View style={styles.noticeBanner}>
               <Ionicons name="alert-circle" size={20} color={COLORS.error} />
               <Text style={styles.noticeText}>
-                Your subscription has expired. Choose a plan below to restore
-                access.
+                {t("c.sub.expired_notice")}
               </Text>
             </View>
           ) : (
@@ -327,8 +328,8 @@ export default function Subscription() {
               <Ionicons name="sparkles" size={20} color={COLORS.goldPremium} />
               <Text style={styles.welcomeText}>
                 {trialPlan
-                  ? `Start your ${trialDays}-day free trial or pick a plan to unlock everything.`
-                  : "Pick a plan to unlock everything."}
+                  ? t("c.sub.welcome_trial").replace("{n}", String(trialDays))
+                  : t("c.sub.welcome_plain")}
               </Text>
             </View>
           ))}
@@ -339,7 +340,7 @@ export default function Subscription() {
               style={styles.historyToggle}
               onPress={() => setShowHistory((v) => !v)}
             >
-              <Text style={styles.sectionTitle}>HISTORY</Text>
+              <Text style={styles.sectionTitle}>{t("c.sub.history")}</Text>
               <Ionicons
                 name={showHistory ? "chevron-up" : "chevron-down"}
                 size={16}
@@ -354,7 +355,7 @@ export default function Subscription() {
         )}
 
         <View style={styles.divider} />
-        <Text style={styles.title2}>{firstRun ? "Pick how to start" : "Add a New Plan"}</Text>
+        <Text style={styles.title2}>{firstRun ? t("c.sub.pick_start") : t("c.sub.add_plan")}</Text>
 
         <View style={styles.regionRow}>
           <TouchableOpacity
@@ -375,7 +376,7 @@ export default function Subscription() {
                 region === "in" && styles.regionTextActive,
               ]}
             >
-              India · ₹
+              {t("c.sub.india")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -396,7 +397,7 @@ export default function Subscription() {
                 region === "global" && styles.regionTextActive,
               ]}
             >
-              Global · $
+              {t("c.sub.global")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -415,7 +416,7 @@ export default function Subscription() {
             <React.Fragment key={p.id}>
             {showPaidHeader && (
               <Text style={styles.title2}>
-                {trialPlan ? "Or buy a plan directly" : "Choose a plan"}
+                {trialPlan ? t("c.sub.or_buy") : t("c.sub.choose_a_plan")}
               </Text>
             )}
             <TouchableOpacity
@@ -439,16 +440,16 @@ export default function Subscription() {
             >
               {isActive ? (
                 <View style={[styles.badge, styles.badgeActive]}>
-                  <Text style={styles.badgeText}>ACTIVE</Text>
+                  <Text style={styles.badgeText}>{t("c.sub.active")}</Text>
                 </View>
               ) : isUpcoming ? (
                 <View style={[styles.badge, styles.badgeUpcoming]}>
-                  <Text style={styles.badgeText}>QUEUED</Text>
+                  <Text style={styles.badgeText}>{t("c.sub.queued_badge")}</Text>
                 </View>
               ) : p.badge || p.popular ? (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>
-                    {(p.badge || "MOST POPULAR").toUpperCase()}
+                    {(p.badge || t("c.sub.most_popular")).toUpperCase()}
                   </Text>
                 </View>
               ) : null}
@@ -473,7 +474,7 @@ export default function Subscription() {
                     size={16}
                     color={COLORS.goldPremium}
                   />
-                  <Text style={styles.perkText}>{perk}</Text>
+                  <Text style={styles.perkText}>{p.perks?.length ? perk : t(perk)}</Text>
                 </View>
               ))}
             </TouchableOpacity>
@@ -489,7 +490,7 @@ export default function Subscription() {
               color={COLORS.textMuted}
             />
             <Text style={styles.trialUsedText}>
-              Free trial — already used on this account
+              {t("c.sub.trial_used")}
             </Text>
           </View>
         )}
@@ -501,9 +502,7 @@ export default function Subscription() {
             color={COLORS.goldPremium}
           />
           <Text style={styles.trustText}>
-            {region === "in"
-              ? "UPI · Cards · Wallets · NetBanking · Secured by Razorpay"
-              : "International cards · 256-bit SSL · Secured by Razorpay"}
+            {region === "in" ? t("c.sub.trust_in") : t("c.sub.trust_global")}
           </Text>
         </View>
       </ScrollView>
@@ -570,10 +569,10 @@ export default function Subscription() {
                           return;
                         }
                         Alert.alert(
-                          isQueued ? "Plan Queued" : "Welcome to FitX Premium",
+                          isQueued ? t("c.sub.plan_queued") : t("c.sub.welcome_premium"),
                           isQueued
-                            ? `Your ${selected.toUpperCase()} plan is scheduled to start on ${fmtDate(result.starts_at)} — right after your current plan ends.`
-                            : "Your subscription is now active.",
+                            ? t("c.sub.queued_msg").replace("{plan}", selected.toUpperCase()).replace("{date}", fmtDate(result.starts_at))
+                            : t("c.sub.now_active"),
                         );
                       },
                       onError: (e: any) => {
@@ -583,9 +582,9 @@ export default function Subscription() {
                           reason: e?.message,
                         });
                         Alert.alert(
-                          "Almost there",
+                          t("c.sub.almost"),
                           e.message ||
-                            "We couldn't confirm your payment just now. If you were charged, your access will unlock shortly.",
+                            t("c.sub.confirm_fail"),
                         );
                       },
                     },
@@ -596,7 +595,7 @@ export default function Subscription() {
                     reason: msg.type,
                   });
                   Alert.alert(
-                    "Payment cancelled",
+                    t("c.sub.cancelled"),
                     (msg as any).description ?? "",
                   );
                 }
@@ -610,6 +609,7 @@ export default function Subscription() {
 }
 
 function ActivePlanCard({ sub, plans }: { sub: SubEntry; plans: any[] }) {
+  const t = useT();
   return (
     <View style={styles.subCard}>
       <View style={styles.subCardRow}>
@@ -621,7 +621,7 @@ function ActivePlanCard({ sub, plans }: { sub: SubEntry; plans: any[] }) {
           </Text>
         </View>
         <View style={styles.daysChip}>
-          <Text style={styles.daysChipText}>{sub.days_remaining}d</Text>
+          <Text style={styles.daysChipText}>{t("c.sub.days_short").replace("{n}", String(sub.days_remaining))}</Text>
         </View>
       </View>
       <View style={styles.progressTrack}>
@@ -664,6 +664,7 @@ function UpcomingPlanCard({
   activating: boolean;
   onActivate: () => void;
 }) {
+  const t = useT();
   return (
     <View style={[styles.subCard, styles.subCardUpcoming]}>
       <View style={styles.subCardRow}>
@@ -671,7 +672,7 @@ function UpcomingPlanCard({
         <View style={{ flex: 1, marginLeft: 10 }}>
           <Text style={styles.subCardTitle}>{planLabel(sub.plan, plans)}</Text>
           <Text style={styles.subCardDate}>
-            Starts {fmtDate(sub.starts_at)} → {fmtDate(sub.ends_at)}
+            {t("c.sub.starts").replace("{date}", fmtDate(sub.starts_at))} → {fmtDate(sub.ends_at)}
           </Text>
         </View>
       </View>
@@ -685,18 +686,19 @@ function UpcomingPlanCard({
         ) : (
           <>
             <Ionicons name="flash" size={14} color={COLORS.onAccent} />
-            <Text style={styles.activateBtnText}>ACTIVATE NOW</Text>
+            <Text style={styles.activateBtnText}>{t("c.sub.activate_now")}</Text>
           </>
         )}
       </TouchableOpacity>
       <Text style={styles.activateHint}>
-        Activating starts this plan today. Your current plan keeps running.
+        {t("c.sub.activate_hint")}
       </Text>
     </View>
   );
 }
 
 function HistoryCard({ sub, plans }: { sub: SubEntry; plans: any[] }) {
+  const t = useT();
   return (
     <View style={[styles.subCard, styles.subCardExpired]}>
       <View style={styles.subCardRow}>
@@ -711,7 +713,7 @@ function HistoryCard({ sub, plans }: { sub: SubEntry; plans: any[] }) {
         </View>
         <View style={[styles.daysChip, styles.daysChipExpired]}>
           <Text style={[styles.daysChipText, { color: COLORS.textMuted }]}>
-            EXPIRED
+            {t("c.sub.expired")}
           </Text>
         </View>
       </View>

@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React, { useState } from "react";
 import {
   View,
@@ -15,6 +16,7 @@ import { useCurrentPlan, useGeneratePlan } from "@/src/hooks/usePlans";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function Plans() {
+  const t = useT();
   const router = useRouter();
   const { data: plan, isLoading } = useCurrentPlan();
   const generate = useGeneratePlan();
@@ -22,16 +24,16 @@ export default function Plans() {
 
   const onGenerate = () => {
     generate.mutate(undefined, {
-      onError: (e: any) => Alert.alert("Generation failed", e.message),
+      onError: (e: any) => Alert.alert(t("b.plans.genFailed"), e.message),
     });
   };
 
   return (
     <SafeAreaView style={styles.container} testID="plans-screen" edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>AI Plans</Text>
+        <Text style={styles.title}>{t("b.plans.title")}</Text>
         <TouchableOpacity testID="regen-btn" onPress={onGenerate} disabled={generate.isPending}>
-          <Text style={styles.regen}>{generate.isPending ? "GENERATING..." : "REGENERATE"}</Text>
+          <Text style={styles.regen}>{generate.isPending ? t("b.plans.generating") : t("b.plans.regen")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -39,19 +41,19 @@ export default function Plans() {
         <View style={styles.loading}>
           <ActivityIndicator color={COLORS.goldPremium} size="large" />
           <Text style={styles.loadingText}>
-            {generate.isPending ? "Building your personalized AI plan..." : "Loading..."}
+            {generate.isPending ? t("b.plans.building") : t("b.plans.loading")}
           </Text>
         </View>
       )}
 
       {!plan && !isLoading && !generate.isPending && (
         <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>No plan yet</Text>
+          <Text style={styles.emptyTitle}>{t("b.plans.none")}</Text>
           <Text style={styles.emptySub}>
-            Generate a personalized workout + diet plan powered by GPT-4o
+            {t("b.plans.noneSub")}
           </Text>
           <TouchableOpacity testID="gen-plan-btn" style={styles.primaryBtn} onPress={onGenerate}>
-            <Text style={styles.primaryBtnText}>GENERATE PLAN</Text>
+            <Text style={styles.primaryBtnText}>{t("b.plans.gen")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="workouts-empty-link"
@@ -59,7 +61,7 @@ export default function Plans() {
             onPress={() => router.push("/workouts" as any)}
           >
             <Ionicons name="play-circle-outline" size={18} color={COLORS.goldPremium} />
-            <Text style={styles.secondaryLinkText}>Browse Workout Videos</Text>
+            <Text style={styles.secondaryLinkText}>{t("b.plans.browse")}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -69,10 +71,10 @@ export default function Plans() {
           <View style={styles.summaryCard}>
             <Text style={styles.summaryText}>{plan.plan.summary}</Text>
             <View style={styles.macroBar}>
-              <SummaryItem label="CAL" value={plan.plan.target_calories} />
-              <SummaryItem label="P" value={`${plan.plan.target_protein_g}g`} />
-              <SummaryItem label="C" value={`${plan.plan.target_carbs_g}g`} />
-              <SummaryItem label="F" value={`${plan.plan.target_fats_g}g`} />
+              <SummaryItem label={t("b.plans.cal")} value={plan.plan.target_calories} />
+              <SummaryItem label={t("b.plans.p")} value={`${plan.plan.target_protein_g}g`} />
+              <SummaryItem label={t("b.plans.c")} value={`${plan.plan.target_carbs_g}g`} />
+              <SummaryItem label={t("b.plans.f")} value={`${plan.plan.target_fats_g}g`} />
             </View>
           </View>
 
@@ -86,8 +88,8 @@ export default function Plans() {
               <Ionicons name="play-circle" size={32} color={COLORS.onAccent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.videoTitle}>Workout Videos</Text>
-              <Text style={styles.videoSub}>Home & Gym · Step-by-step demos</Text>
+              <Text style={styles.videoTitle}>{t("b.plans.videos")}</Text>
+              <Text style={styles.videoSub}>{t("b.plans.videosSub")}</Text>
             </View>
             <Ionicons name="chevron-forward" size={22} color={COLORS.goldPremium} />
           </TouchableOpacity>
@@ -99,7 +101,7 @@ export default function Plans() {
               onPress={() => setTab("workout")}
             >
               <Text style={[styles.tabText, tab === "workout" && styles.tabTextActive]}>
-                WORKOUT
+                {t("b.plans.workout")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -107,7 +109,7 @@ export default function Plans() {
               style={[styles.tab, tab === "diet" && styles.tabActive]}
               onPress={() => setTab("diet")}
             >
-              <Text style={[styles.tabText, tab === "diet" && styles.tabTextActive]}>DIET</Text>
+              <Text style={[styles.tabText, tab === "diet" && styles.tabTextActive]}>{t("b.plans.diet")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -143,7 +145,7 @@ export default function Plans() {
                   </Text>
                 ))}
                 <Text style={styles.dayFocus}>
-                  {m.calories} kcal · {m.protein_g}g protein
+                  {t("b.plans.protein").replace("{kcal}", String(m.calories)).replace("{p}", String(m.protein_g))}
                 </Text>
               </View>
             ))}

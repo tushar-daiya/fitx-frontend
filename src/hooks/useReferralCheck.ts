@@ -7,6 +7,8 @@ import { clearPendingReferral, REFERRAL_CODE_LENGTH } from "@/src/lib/referral";
 //   re-validates on signup, so this never blocks the form.
 export type ReferralStatus = "idle" | "checking" | "valid" | "invalid" | "unverified";
 
+export type ReferralBlocker = "checking" | "invalid" | "incomplete";
+
 type ValidateResponse = { valid: boolean; enabled: boolean; referrer_first_name?: string };
 
 /**
@@ -76,15 +78,16 @@ export function useReferralCheck() {
     return () => clearTimeout(timer);
   }, [code, autoFilled, clear]);
 
-  /** Why the form can't be submitted yet because of the referral code, if at all. */
-  const blocker: string | null = !code
+  /** Why the form can't be submitted yet because of the referral code, if at all.
+   * A code (not text) so the screen can show it in the user's language. */
+  const blocker: ReferralBlocker | null = !code
     ? null
     : status === "checking"
-      ? "Checking your referral code…"
+      ? "checking"
       : status === "invalid"
-        ? "That referral code doesn't exist. Fix it or remove it."
+        ? "invalid"
         : code.length < REFERRAL_CODE_LENGTH
-          ? `Referral codes are ${REFERRAL_CODE_LENGTH} characters. Finish it or remove it.`
+          ? "incomplete"
           : null;
 
   return { code, type, autoFill, clear, open, setOpen, autoFilled, status, referrer, blocker };

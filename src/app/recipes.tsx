@@ -13,22 +13,24 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRecipes } from "@/src/hooks/useRecipes";
 import type { DietType } from "@/src/types/api";
+import { useT } from "@/src/store/i18n";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 const FILTERS = ["all", "veg", "non_veg", "eggetarian", "vegan", "jain"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const FILTER_LABELS: Record<Filter, string> = {
-  all: "All",
-  veg: "Veg",
-  non_veg: "Non-Veg",
-  eggetarian: "Eggetarian",
-  vegan: "Vegan",
-  jain: "Jain",
+  all: "c.rec.f_all",
+  veg: "c.rec.f_veg",
+  non_veg: "c.rec.f_non_veg",
+  eggetarian: "c.rec.f_eggetarian",
+  vegan: "c.rec.f_vegan",
+  jain: "c.rec.f_jain",
 };
 
 export default function Recipes() {
   const router = useRouter();
+  const t = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const { data: recipes = [], isLoading } = useRecipes(
     filter === "all" ? undefined : (filter as DietType)
@@ -40,7 +42,7 @@ export default function Recipes() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={26} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Recipes</Text>
+        <Text style={styles.title}>{t("c.rec.title")}</Text>
         <View style={{ width: 42 }} />
       </View>
 
@@ -59,7 +61,7 @@ export default function Recipes() {
             style={[styles.filterPill, filter === f && styles.filterPillActive]}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {FILTER_LABELS[f]}
+              {t(FILTER_LABELS[f])}
             </Text>
           </TouchableOpacity>
         ))}
@@ -68,15 +70,15 @@ export default function Recipes() {
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator color={COLORS.goldPremium} size="large" />
-          <Text style={styles.loadingText}>Loading recipes...</Text>
+          <Text style={styles.loadingText}>{t("c.rec.loading")}</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list}>
           {recipes.length === 0 && (
             <View style={styles.emptyWrap}>
               <Ionicons name="restaurant-outline" size={48} color={COLORS.textMuted} />
-              <Text style={styles.emptyTitle}>No recipes found</Text>
-              <Text style={styles.emptyText}>Try a different filter</Text>
+              <Text style={styles.emptyTitle}>{t("c.rec.none")}</Text>
+              <Text style={styles.emptyText}>{t("c.rec.try_filter")}</Text>
             </View>
           )}
           {recipes.map((r) => (
@@ -98,7 +100,7 @@ export default function Recipes() {
               <View style={styles.cardBody}>
                 <View style={styles.dietPill}>
                   <Text style={styles.dietPillText}>
-                    {FILTER_LABELS[r.diet as Filter] ?? r.diet} · {r.cuisine}
+                    {FILTER_LABELS[r.diet as Filter] ? t(FILTER_LABELS[r.diet as Filter]) : r.diet} · {r.cuisine}
                   </Text>
                 </View>
                 <Text style={styles.cardTitle} numberOfLines={2}>{r.title}</Text>

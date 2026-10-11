@@ -13,10 +13,12 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAnalyzeForm } from "@/src/hooks/useForm";
+import { useT } from "@/src/store/i18n";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function FormCorrector() {
   const router = useRouter();
+  const t = useT();
   const analyzeForm = useAnalyzeForm();
 
   const upload = async () => {
@@ -24,8 +26,8 @@ export default function FormCorrector() {
     if (perm.status !== "granted") {
       if (!perm.canAskAgain) {
         Alert.alert(
-          "Permission required",
-          "Please enable Photos access from Settings to upload a workout video."
+          t("c.form.perm_title"),
+          t("c.form.perm_msg")
         );
         return;
       }
@@ -42,7 +44,7 @@ export default function FormCorrector() {
 
     analyzeForm.mutate(
       { videoUri: r.assets[0].uri },
-      { onError: (e: any) => Alert.alert("Analysis failed", e.message) }
+      { onError: (e: any) => Alert.alert(t("c.form.fail"), e.message) }
     );
   };
 
@@ -54,26 +56,24 @@ export default function FormCorrector() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Form Corrector</Text>
+        <Text style={styles.title}>{t("c.form.title")}</Text>
         <View style={{ width: 28 }} />
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.heroCard}>
           <Ionicons name="videocam" size={40} color={COLORS.goldPremium} />
-          <Text style={styles.heroTitle}>AI Form Analysis</Text>
+          <Text style={styles.heroTitle}>{t("c.form.hero_title")}</Text>
           <Text style={styles.heroSub}>
-            Upload any workout video — squat, push-up, deadlift, plank, lunge, curl, press, burpee,
-            jumping jack and more. Our AI detects the movement and gives you specific posture
-            corrections and coaching tips.
+            {t("c.form.hero_sub")}
           </Text>
         </View>
 
         <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>📹 BEST RESULTS</Text>
-          <Tip text="Record from the side (90° angle) for best pose detection" />
-          <Tip text="Full body must be visible in the frame" />
-          <Tip text="Good lighting · plain background helps" />
-          <Tip text="Keep it under 30 seconds" />
+          <Text style={styles.tipsTitle}>{t("c.form.best")}</Text>
+          <Tip text={t("c.form.tip1")} />
+          <Tip text={t("c.form.tip2")} />
+          <Tip text={t("c.form.tip3")} />
+          <Tip text={t("c.form.tip4")} />
         </View>
 
         <TouchableOpacity
@@ -86,13 +86,13 @@ export default function FormCorrector() {
             <View style={{ alignItems: "center" }}>
               <ActivityIndicator color={COLORS.onAccent} />
               <Text style={[styles.uploadText, { marginTop: 6, fontSize: 11 }]}>
-                Analyzing your form with AI...
+                {t("c.form.analyzing")}
               </Text>
             </View>
           ) : (
             <>
               <Ionicons name="cloud-upload" size={22} color={COLORS.onAccent} />
-              <Text style={styles.uploadText}>UPLOAD WORKOUT VIDEO</Text>
+              <Text style={styles.uploadText}>{t("c.form.upload")}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -100,18 +100,18 @@ export default function FormCorrector() {
         {result && (
           <View style={styles.resultCard} testID="form-result">
             <View style={styles.detectedRow}>
-              <Text style={styles.detectedLabel}>EXERCISE DETECTED</Text>
+              <Text style={styles.detectedLabel}>{t("c.form.detected")}</Text>
               {result.confidence ? (
                 <Text style={styles.confTag}>
-                  {String(result.confidence).toUpperCase()} CONFIDENCE
+                  {t("c.form.conf").replace("{v}", String(result.confidence).toUpperCase())}
                 </Text>
               ) : null}
             </View>
             <Text style={styles.detectedName}>
-              {result.exercise_detected || result.exercise || "Unknown movement"}
+              {result.exercise_detected || result.exercise || t("c.form.unknown")}
             </Text>
 
-            <Text style={styles.scoreLabel}>YOUR SCORE</Text>
+            <Text style={styles.scoreLabel}>{t("c.form.score")}</Text>
             <Text style={styles.scoreValue}>{result.score}/100</Text>
             <View style={styles.scoreBar}>
               <View
@@ -131,7 +131,7 @@ export default function FormCorrector() {
             </View>
             <Text style={styles.summary}>{result.summary}</Text>
 
-            <Text style={styles.coachLabel}>COACHING NOTES</Text>
+            <Text style={styles.coachLabel}>{t("c.form.coaching")}</Text>
             {(result.coaching_points || []).map((c, i) => {
               const isFix = c.startsWith("FIX");
               return (
@@ -148,19 +148,19 @@ export default function FormCorrector() {
 
             {result.ideal_form ? (
               <>
-                <Text style={styles.coachLabel}>IDEAL FORM</Text>
+                <Text style={styles.coachLabel}>{t("c.form.ideal")}</Text>
                 <Text style={styles.idealText}>{result.ideal_form}</Text>
               </>
             ) : null}
 
             <Text style={styles.framesText}>
-              {result.frames_analyzed} frames analyzed
-              {result.duration_s ? ` · ${result.duration_s}s video` : ""}
+              {t("c.form.frames").replace("{n}", String(result.frames_analyzed))}
+              {result.duration_s ? ` · ${t("c.form.video_s").replace("{s}", String(result.duration_s))}` : ""}
             </Text>
 
             <TouchableOpacity style={styles.againBtn} onPress={upload}>
               <Ionicons name="refresh" size={16} color={COLORS.goldPremium} />
-              <Text style={styles.againText}>Analyze another video</Text>
+              <Text style={styles.againText}>{t("c.form.again")}</Text>
             </TouchableOpacity>
           </View>
         )}

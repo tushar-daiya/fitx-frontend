@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React from "react";
 import {
   View,
@@ -6,6 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -17,8 +20,11 @@ import { useMealsToday } from "@/src/hooks/useMeals";
 import { useDailyToday, useLogWater, useLogSteps } from "@/src/hooks/useDaily";
 import { useCurrentPlan } from "@/src/hooks/usePlans";
 import { useAvatarProgress } from "@/src/hooks/useAvatar";
+import { useStepsSync } from "@/src/hooks/useStepsSync";
+import { HEALTH_CONNECT_STORE_URL } from "@/src/lib/steps";
 
 export default function Home() {
+  const t = useT();
   const { user } = useAuthStore();
   const router = useRouter();
 
@@ -38,12 +44,31 @@ export default function Home() {
     const next = Math.min(20, (daily.water_glasses || 0) + 1);
     logWater.mutate(next);
   };
-  const addSteps = () => {
-    const next = (daily.steps || 0) + 1000;
-    logSteps.mutate(next);
+  const stepsSync = useStepsSync(daily.steps || 0);
+  const autoSteps = stepsSync.status === "ready";
+  const onStepsPress = async () => {
+    if (autoSteps) return; // tracked automatically
+    if (stepsSync.status === "needs_permission") {
+      const s = await stepsSync.enable();
+      if (s !== "ready") Alert.alert(t("b.home.stepsOff"), t("b.home.stepsOffMsg"));
+      return;
+    }
+    if (stepsSync.status === "needs_install") {
+      return Alert.alert(
+        t("b.home.hcNeeded"),
+        t("b.home.hcMsg"),
+        [{ text: t("b.home.notNow"), style: "cancel" }, { text: t("b.home.openStore"), onPress: () => Linking.openURL(HEALTH_CONNECT_STORE_URL) }],
+      );
+    }
+    logSteps.mutate((daily.steps || 0) + 1000); // no step source on this device
   };
+  const stepsHint =
+    autoSteps ? t("b.home.auto")
+    : stepsSync.status === "needs_permission" ? t("b.home.enableSteps")
+    : stepsSync.status === "needs_install" ? t("b.home.setupHC")
+    : t("b.home.add1k");
 
-  const target = plan?.plan?.target_calories || 2200;
+  const target = meals.target_calories || plan?.plan?.target_calories || 2200;
   const calPct = Math.min(1, meals.totals.calories / target);
   const waterPct = Math.min(1, (daily.water_glasses || 0) / 8);
   const stepsPct = Math.min(1, (daily.steps || 0) / 10000);
@@ -62,8 +87,8 @@ export default function Home() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.hi}>Hello,</Text>
-            <Text style={styles.name}>{user?.name || "Champion"}</Text>
+            <Text style={styles.hi}>{t("b.home.hello")}</Text>
+            <Text style={styles.name}>{user?.name || t("b.home.champion")}</Text>
           </View>
           <View style={styles.brandPill}>
             <Text style={styles.brandText}>FitX</Text>
@@ -79,55 +104,55 @@ export default function Home() {
             size={180}
           />
           <View style={{ marginLeft: 12, flex: 1 }}>
-            <Text style={styles.heroLabel}>YOUR PROGRESS</Text>
+            <Text style={styles.heroLabel}>{t("b.home.progress")}</Text>
             <Text style={styles.heroValue}>
               {(progress.progress * 100).toFixed(0)}%
             </Text>
-            <Text style={styles.heroSub}>toward {user?.profile?.target_weight_kg || "—"}kg</Text>
+            <Text style={styles.heroSub}>{t("b.home.toward").replace("{kg}", String(user?.profile?.target_weight_kg || "—"))}</Text>
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${progress.progress * 100}%` }]} />
             </View>
             <Text style={styles.daysText}>
-              Day {(progress as any).days || 1} · {(progress as any).goal?.replace("_", " ") || ""}
+              {t("b.home.day").replace("{n}", String((progress as any).days || 1))} · {(progress as any).goal?.replace("_", " ") || ""}
             </Text>
           </View>
         </TouchableOpacity>
 
         {/* Calorie ring */}
-        <View style={styles.card}>
+        <TouchableOpacity testID="nutrition-card" activeOpacity={0.85} onPress={() => router.push("/food-diary" as any)} style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.caption}>TODAY'S NUTRITION</Text>
+            <Text style={styles.caption}>{t("b.home.nutrition")}</Text>
             <Text style={styles.target}>{Math.round(meals.totals.calories)} / {target} kcal</Text>
           </View>
           <View style={styles.ringBar}>
             <View style={[styles.ringFill, { width: `${calPct * 100}%` }]} />
           </View>
           <View style={styles.macroRow}>
-            <MacroChip label="PROTEIN" value={`${Math.round(meals.totals.protein_g)}g`} />
-            <MacroChip label="CARBS" value={`${Math.round(meals.totals.carbs_g)}g`} />
-            <MacroChip label="FATS" value={`${Math.round(meals.totals.fats_g)}g`} />
+            <MacroChip label={t("b.home.protein")} value={`${Math.round(meals.totals.protein_g)}g`} />
+            <MacroChip label={t("b.home.carbs")} value={`${Math.round(meals.totals.carbs_g)}g`} />
+            <MacroChip label={t("b.home.fats")} value={`${Math.round(meals.totals.fats_g)}g`} />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Water + Steps grid */}
         <View style={styles.grid}>
           <TouchableOpacity testID="water-card" style={styles.gridCard} onPress={addWater}>
             <Ionicons name="water" size={28} color={COLORS.goldPremium} />
             <Text style={styles.gridVal}>{daily.water_glasses || 0}/8</Text>
-            <Text style={styles.gridLabel}>WATER GLASSES</Text>
+            <Text style={styles.gridLabel}>{t("b.home.water")}</Text>
             <View style={styles.miniBar}>
               <View style={[styles.miniFill, { width: `${waterPct * 100}%` }]} />
             </View>
-            <Text style={styles.addHint}>Tap to add +1</Text>
+            <Text style={styles.addHint}>{t("b.home.addWater")}</Text>
           </TouchableOpacity>
-          <TouchableOpacity testID="steps-card" style={styles.gridCard} onPress={addSteps}>
+          <TouchableOpacity testID="steps-card" style={styles.gridCard} onPress={onStepsPress} activeOpacity={autoSteps ? 1 : 0.7}>
             <Ionicons name="walk" size={28} color={COLORS.goldPremium} />
             <Text style={styles.gridVal}>{(daily.steps || 0).toLocaleString()}</Text>
-            <Text style={styles.gridLabel}>STEPS</Text>
+            <Text style={styles.gridLabel}>{t("b.home.steps")}</Text>
             <View style={styles.miniBar}>
               <View style={[styles.miniFill, { width: `${stepsPct * 100}%` }]} />
             </View>
-            <Text style={styles.addHint}>Tap to add +1k</Text>
+            <Text style={styles.addHint}>{stepsHint}</Text>
           </TouchableOpacity>
         </View>
 
@@ -139,7 +164,7 @@ export default function Home() {
             onPress={() => router.push("/(tabs)/scan" as any)}
           >
             <Ionicons name="camera" size={20} color={COLORS.onAccent} />
-            <Text style={styles.actionBtnText}>SCAN MEAL</Text>
+            <Text style={styles.actionBtnText}>{t("b.home.scanMeal")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="quick-log"
@@ -147,7 +172,7 @@ export default function Home() {
             onPress={() => router.push("/log-meal" as any)}
           >
             <Ionicons name="add-circle" size={20} color={COLORS.goldPremium} />
-            <Text style={styles.actionBtnAltText}>LOG FOOD</Text>
+            <Text style={styles.actionBtnAltText}>{t("b.home.logFood")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="quick-recipes"
@@ -155,7 +180,7 @@ export default function Home() {
             onPress={() => router.push("/recipes" as any)}
           >
             <Ionicons name="restaurant" size={20} color={COLORS.goldPremium} />
-            <Text style={styles.actionBtnAltText}>RECIPES</Text>
+            <Text style={styles.actionBtnAltText}>{t("b.home.recipes")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -165,12 +190,12 @@ export default function Home() {
             style={styles.heroCTA}
             onPress={() => router.push("/(tabs)/plans" as any)}
           >
-            <Text style={styles.heroCTATitle}>Generate Your AI Plan</Text>
+            <Text style={styles.heroCTATitle}>{t("b.home.genTitle")}</Text>
             <Text style={styles.heroCTASub}>
-              Personalized workout + diet built for your goal
+              {t("b.home.genSub")}
             </Text>
             <View style={styles.heroBtn}>
-              <Text style={styles.heroBtnText}>GENERATE NOW →</Text>
+              <Text style={styles.heroBtnText}>{t("b.home.genNow")}</Text>
             </View>
           </TouchableOpacity>
         )}

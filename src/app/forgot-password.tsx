@@ -17,15 +17,17 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
 import { AuthVideoBackground } from "@/src/AuthVideoBackground";
+import { useT } from "@/src/store/i18n";
 
 export default function ForgotPassword() {
   const router = useRouter();
+  const t = useT();
   const { requestPasswordReset } = useAuthStore();
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
   const onSubmit = async () => {
-    if (!phone) return Alert.alert("Required", "Enter your phone number");
+    if (!phone) return Alert.alert(t("a.required"), t("a.enterPhone"));
     setBusy(true);
     try {
       const fullPhone = `+91${phone.trim()}`;
@@ -35,7 +37,7 @@ export default function ForgotPassword() {
         params: { phone: fullPhone, purpose: "reset" },
       });
     } catch (e: any) {
-      Alert.alert("Something went wrong", e.message);
+      Alert.alert(t("a.fp.failed"), e.message);
     } finally {
       setBusy(false);
     }
@@ -48,8 +50,8 @@ export default function ForgotPassword() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Logo size={96} style={styles.logoImg} />
           <View style={styles.card}>
-            <Text style={styles.heading}>Reset your password</Text>
-            <Text style={styles.sub}>We'll send a verification code to your phone number</Text>
+            <Text style={styles.heading}>{t("a.fp.heading")}</Text>
+            <Text style={styles.sub}>{t("a.fp.sub")}</Text>
 
             <View style={styles.phoneRow}>
               <View style={styles.phonePrefix}>
@@ -57,7 +59,7 @@ export default function ForgotPassword() {
               </View>
               <TextInput
                 testID="forgot-password-phone"
-                placeholder="10-digit mobile number"
+                placeholder={t("a.phoneHint")}
                 placeholderTextColor={COLORS.textMuted}
                 keyboardType="number-pad"
                 maxLength={10}
@@ -68,7 +70,7 @@ export default function ForgotPassword() {
             </View>
 
             <TouchableOpacity testID="forgot-password-submit" style={styles.primaryBtn} onPress={onSubmit} disabled={busy}>
-              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>SEND CODE</Text>}
+              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>{t("a.sendCode")}</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -76,7 +78,7 @@ export default function ForgotPassword() {
               onPress={() => router.back()}
               style={{ marginTop: 18, alignItems: "center" }}
             >
-              <Text style={styles.linkText}>Back to sign in</Text>
+              <Text style={styles.linkText}>{t("a.fp.back")}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

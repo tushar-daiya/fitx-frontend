@@ -3,6 +3,9 @@ import { track } from "@/src/lib/analytics";
 
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL ?? "";
 export const API = `${BASE}/api`;
+// Sent on every request so the backend can tell this build from older ones that
+// predate mandatory phone verification (see LEGACY_AUTH_COMPAT on the backend).
+const CLIENT_VERSION = "2";
 const TOKEN_KEY = "fitx_token";
 const PREAUTH_TOKEN_KEY = "fitx_preauth_token";
 
@@ -31,7 +34,10 @@ export async function apiFetch<T = unknown>(
   path: string,
   opts: { method?: string; body?: unknown; auth?: boolean | "preauth" } = {}
 ): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-FitX-Client": CLIENT_VERSION,
+  };
   if (opts.auth === "preauth") {
     // Prefer an existing full session token when one is already stored —
     // an already-logged-in user who hasn't verified their phone yet (e.g.

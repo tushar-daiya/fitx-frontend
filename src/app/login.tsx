@@ -17,16 +17,18 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
 import { AuthVideoBackground } from "@/src/AuthVideoBackground";
+import { useT } from "@/src/store/i18n";
 
 export default function Login() {
   const router = useRouter();
+  const t = useT();
   const { login } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const onLogin = async () => {
-    if (!email || !password) return Alert.alert("Required", "Enter email/phone and password");
+    if (!email || !password) return Alert.alert(t("a.required"), t("a.login.enterBoth"));
     setBusy(true);
     try {
       const result = await login(email.trim(), password);
@@ -43,7 +45,7 @@ export default function Login() {
       }
       router.replace("/");
     } catch (e: any) {
-      Alert.alert("Login failed", e.message);
+      Alert.alert(t("a.login.failed"), e.message);
     } finally {
       setBusy(false);
     }
@@ -59,15 +61,15 @@ export default function Login() {
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
             <Logo size={112} style={styles.logoImg} />
             <Text style={styles.brand}>FitX</Text>
-            <Text style={styles.tag}>Elevate Your Fitness Journey</Text>
+            <Text style={styles.tag}>{t("a.tagline")}</Text>
 
             <View style={styles.card}>
-              <Text style={styles.heading}>Welcome back</Text>
-              <Text style={styles.sub}>Sign in to continue your journey</Text>
+              <Text style={styles.heading}>{t("a.login.welcome")}</Text>
+              <Text style={styles.sub}>{t("a.login.sub")}</Text>
 
               <TextInput
                 testID="login-email"
-                placeholder="Email or phone number"
+                placeholder={t("a.login.idPh")}
                 placeholderTextColor={COLORS.textMuted}
                 autoCapitalize="none"
                 keyboardType="email-address"
@@ -77,7 +79,7 @@ export default function Login() {
               />
               <TextInput
                 testID="login-password"
-                placeholder="Password"
+                placeholder={t("a.password")}
                 placeholderTextColor={COLORS.textMuted}
                 secureTextEntry
                 value={password}
@@ -90,7 +92,7 @@ export default function Login() {
                 onPress={() => router.push("/forgot-password")}
                 style={{ alignItems: "flex-end", marginBottom: SPACING.s }}
               >
-                <Text style={styles.linkText}>Forgot password?</Text>
+                <Text style={styles.linkText}>{t("a.login.forgot")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -102,7 +104,7 @@ export default function Login() {
                 {busy ? (
                   <ActivityIndicator color={COLORS.onAccent} />
                 ) : (
-                  <Text style={styles.primaryBtnText}>SIGN IN</Text>
+                  <Text style={styles.primaryBtnText}>{t("a.login.signin")}</Text>
                 )}
               </TouchableOpacity>
 
@@ -112,7 +114,7 @@ export default function Login() {
                 style={{ marginTop: 18, alignItems: "center" }}
               >
                 <Text style={styles.linkText}>
-                  New here? <Text style={{ color: COLORS.goldPremium }}>Create account</Text>
+                  {t("a.login.newHere")} <Text style={{ color: COLORS.goldPremium }}>{t("a.login.create")}</Text>
                 </Text>
               </TouchableOpacity>
             </View>

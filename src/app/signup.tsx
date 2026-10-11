@@ -20,9 +20,11 @@ import { Logo } from "@/src/Logo";
 import { AuthVideoBackground } from "@/src/AuthVideoBackground";
 import { clearPendingReferral, getPendingReferral, sanitizeCode, REFERRAL_CODE_LENGTH } from "@/src/lib/referral";
 import { useReferralCheck } from "@/src/hooks/useReferralCheck";
+import { useT } from "@/src/store/i18n";
 
 export default function Signup() {
   const router = useRouter();
+  const t = useT();
   const { ref } = useLocalSearchParams<{ ref?: string }>();
   const { signup } = useAuthStore();
   const [name, setName] = useState("");
@@ -44,7 +46,7 @@ export default function Signup() {
   const onSubmit = async () => {
     setSubmitted(true);
     if (!name || !email || !phone || password.length < 6)
-      return Alert.alert("Required", "Name, email, phone, password (min 6 chars)");
+      return Alert.alert(t("a.required"), t("a.signup.reqMsg"));
     if (referral.blocker) return;
     setBusy(true);
     try {
@@ -61,7 +63,7 @@ export default function Signup() {
         params: { phone: verifiedPhone, purpose: "signup" },
       });
     } catch (e: any) {
-      Alert.alert("Signup failed", e.message);
+      Alert.alert(t("a.signup.failed"), e.message);
     } finally {
       setBusy(false);
     }
@@ -74,7 +76,7 @@ export default function Signup() {
   const referralError =
     referral.status === "invalid" ||
     (submitted && referral.code.length > 0 && referral.code.length < REFERRAL_CODE_LENGTH)
-      ? referral.blocker
+      ? referral.blocker && t(`a.signup.ref_${referral.blocker}`).replace("{n}", String(REFERRAL_CODE_LENGTH))
       : null;
 
   return (
@@ -88,12 +90,12 @@ export default function Signup() {
           <Logo size={112} style={styles.logoImg} />
           <Text style={styles.brand}>FitX</Text>
           <View style={styles.card}>
-            <Text style={styles.heading}>Create your account</Text>
-            <Text style={styles.sub}>7-day free trial available after a quick setup</Text>
+            <Text style={styles.heading}>{t("a.signup.heading")}</Text>
+            <Text style={styles.sub}>{t("a.signup.sub")}</Text>
 
             <TextInput
               testID="signup-name"
-              placeholder="Full name"
+              placeholder={t("a.signup.name")}
               placeholderTextColor={COLORS.textMuted}
               value={name}
               onChangeText={setName}
@@ -101,7 +103,7 @@ export default function Signup() {
             />
             <TextInput
               testID="signup-email"
-              placeholder="Email"
+              placeholder={t("a.signup.email")}
               placeholderTextColor={COLORS.textMuted}
               autoCapitalize="none"
               keyboardType="email-address"
@@ -115,7 +117,7 @@ export default function Signup() {
               </View>
               <TextInput
                 testID="signup-phone"
-                placeholder="10-digit mobile number"
+                placeholder={t("a.phoneHint")}
                 placeholderTextColor={COLORS.textMuted}
                 keyboardType="number-pad"
                 maxLength={10}
@@ -126,7 +128,7 @@ export default function Signup() {
             </View>
             <TextInput
               testID="signup-password"
-              placeholder="Password (min 6 chars)"
+              placeholder={t("a.signup.pwPh")}
               placeholderTextColor={COLORS.textMuted}
               secureTextEntry
               value={password}
@@ -138,7 +140,7 @@ export default function Signup() {
               <View style={styles.chip} testID="signup-referral-chip">
                 <Ionicons name="gift" size={18} color={COLORS.goldPremium} />
                 <Text style={styles.chipText}>
-                  {referral.status === "valid" ? `Invited by ${referral.referrer}` : "Checking your invite…"}
+                  {referral.status === "valid" ? t("a.signup.invitedBy").replace("{name}", String(referral.referrer ?? "")) : t("a.signup.checkingInvite")}
                 </Text>
                 {referral.status === "valid" ? (
                   <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
@@ -154,7 +156,7 @@ export default function Signup() {
                 <View style={[styles.referralRow, referralError ? { borderColor: COLORS.error } : null]}>
                   <TextInput
                     testID="signup-referral"
-                    placeholder="Referral code"
+                    placeholder={t("a.signup.refPh")}
                     placeholderTextColor={COLORS.textMuted}
                     autoCapitalize="characters"
                     autoCorrect={false}
@@ -174,7 +176,7 @@ export default function Signup() {
             ) : (
               <TouchableOpacity testID="signup-referral-toggle" onPress={() => referral.setOpen(true)} style={styles.referralLink}>
                 <Ionicons name="gift-outline" size={16} color={COLORS.goldPremium} />
-                <Text style={styles.referralLinkText}>Have a referral code?</Text>
+                <Text style={styles.referralLinkText}>{t("a.signup.haveRef")}</Text>
               </TouchableOpacity>
             )}
 
@@ -187,7 +189,7 @@ export default function Signup() {
               {busy ? (
                 <ActivityIndicator color={COLORS.onAccent} />
               ) : (
-                <Text style={styles.primaryBtnText}>CREATE ACCOUNT</Text>
+                <Text style={styles.primaryBtnText}>{t("a.signup.create")}</Text>
               )}
             </TouchableOpacity>
 
@@ -202,13 +204,13 @@ export default function Signup() {
                 size={20}
                 color={marketingOptIn ? COLORS.goldPremium : COLORS.textMuted}
               />
-              <Text style={styles.consentText}>Send me offers and updates on WhatsApp</Text>
+              <Text style={styles.consentText}>{t("a.signup.consent")}</Text>
             </TouchableOpacity>
             <Text style={styles.legal}>
-              By creating an account you agree to our{" "}
-              <Text style={styles.legalLink} onPress={() => router.push("/terms" as any)}>Terms</Text>
-              {" "}and{" "}
-              <Text style={styles.legalLink} onPress={() => router.push("/privacy" as any)}>Privacy Policy</Text>.
+              {t("a.signup.legal1")}{" "}
+              <Text style={styles.legalLink} onPress={() => router.push("/terms" as any)}>{t("a.signup.terms")}</Text>
+              {" "}{t("a.signup.and")}{" "}
+              <Text style={styles.legalLink} onPress={() => router.push("/privacy" as any)}>{t("a.signup.privacy")}</Text>.
             </Text>
 
             <TouchableOpacity
@@ -217,7 +219,7 @@ export default function Signup() {
               style={{ marginTop: 18, alignItems: "center" }}
             >
               <Text style={{ color: COLORS.textSecondary, fontSize: 14 }}>
-                Have an account? <Text style={{ color: COLORS.goldPremium }}>Sign in</Text>
+                {t("a.signup.haveAcc")} <Text style={{ color: COLORS.goldPremium }}>{t("a.signup.signin")}</Text>
               </Text>
             </TouchableOpacity>
           </View>

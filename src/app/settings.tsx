@@ -15,10 +15,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Constants from "expo-constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/src/lib/api";
+import { apiFetch, setToken } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
-import { useI18nStore } from "@/src/store/i18n";
+import { useI18nStore, useT } from "@/src/store/i18n";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 
 const GOALS = ["fat_loss", "lean_bulk", "body_recomp"];
@@ -27,19 +28,22 @@ const DIETS = ["veg", "non_veg", "eggetarian", "vegan", "jain"];
 const GENDERS = ["male", "female", "other"];
 
 const LIMITS = {
-  age:    { min: 10,  max: 100, label: "Age",           unit: "years" },
-  height: { min: 50,  max: 300, label: "Height",        unit: "cm" },
-  weight: { min: 20,  max: 500, label: "Weight",        unit: "kg" },
-  target: { min: 20,  max: 500, label: "Target weight", unit: "kg" },
+  age:    { min: 10,  max: 100, label: "c.set.f_age",    unit: "c.set.u_years" },
+  height: { min: 50,  max: 300, label: "c.set.f_height", unit: "cm" },
+  weight: { min: 20,  max: 500, label: "c.set.f_weight", unit: "kg" },
+  target: { min: 20,  max: 500, label: "c.set.f_target", unit: "kg" },
 };
 
 type LimitKey = keyof typeof LIMITS;
 
-function validateNumericField(raw: string, key: LimitKey): string | null {
+function validateNumericField(raw: string, key: LimitKey, t: (k: string) => string): string | null {
   const v = parseFloat(raw);
-  if (!raw.trim() || isNaN(v)) return `${LIMITS[key].label} is required`;
-  const { min, max, unit, label } = LIMITS[key];
-  if (v < min || v > max) return `${label} must be between ${min} and ${max} ${unit}`;
+  const { min, max } = LIMITS[key];
+  const label = t(LIMITS[key].label);
+  const unit = LIMITS[key].unit.startsWith("c.") ? t(LIMITS[key].unit) : LIMITS[key].unit;
+  if (!raw.trim() || isNaN(v)) return t("c.set.err_required").replace("{label}", label);
+  if (v < min || v > max)
+    return t("c.set.err_range").replace("{label}", label).replace("{min}", String(min)).replace("{max}", String(max)).replace("{unit}", unit);
   return null;
 }
 
@@ -47,14 +51,15 @@ export default function Settings() {
   const router = useRouter();
   const qc = useQueryClient();
   const { user, refresh, changePhoneRequest } = useAuthStore();
-  const { lang, setLang, t } = useI18nStore();
+  const { lang, setLang } = useI18nStore();
+  const t = useT();
   const p = user?.profile;
   const [changingPhone, setChangingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState("");
   const [phoneBusy, setPhoneBusy] = useState(false);
 
   const onChangePhone = async () => {
-    if (!newPhone.trim()) return Alert.alert("Required", "Enter your new phone number");
+    if (!newPhone.trim()) return Alert.alert(t("c.required"), t("c.set.enter_new_phone"));
     setPhoneBusy(true);
     try {
       const fullPhone = `+91${newPhone.trim()}`;
@@ -65,7 +70,7 @@ export default function Settings() {
         params: { phone: fullPhone, purpose: "phone_change" },
       });
     } catch (e: any) {
-      Alert.alert("Could not send code", e.message);
+      Alert.alert(t("c.set.could_not_send"), e.message);
     } finally {
       setPhoneBusy(false);
     }
@@ -92,8 +97,66 @@ export default function Settings() {
     mutationFn: (marketing_opt_in: boolean) =>
       apiFetch("/users/marketing", { method: "PATCH", body: { marketing_opt_in } }),
     onSuccess: () => refresh(),
-    onError: (e: any) => Alert.alert("Error", e.message),
+    onError: (e: any) => Alert.alert(t("c.error"), e.message),
   });
+
+  const remindersOn = user?.reminders_enabled !== false;
+  const setReminders = useMutation({
+    mutationFn: (reminders_enabled: boolean) =>
+      apiFetch("/users/reminders", { method: "PATCH", body: { reminders_enabled } }),
+    onSuccess: () => refresh(),
+    onError: (e: any) => Alert.alert(t("c.error"), e.message),
+  });
+
+  const [pwOpen, setPwOpen] = useState(false);
+  const [curPw, setCurPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const changePassword = useMutation({
+    mutationFn: () =>
+      apiFetch<{ token: string }>("/users/change-password", {
+        method: "POST",
+        body: { current_password: curPw, new_password: newPw },
+      }),
+    onSuccess: async (r) => {
+      // Other devices are signed out; keep this one signed in with the fresh token.
+      await setToken(r.token);
+      setPwOpen(false);
+      setCurPw("");
+      setNewPw("");
+      Alert.alert(t("c.set.pw_changed"), t("c.set.pw_changed_msg"));
+    },
+    onError: (e: any) => Alert.alert(t("c.set.pw_fail"), e.message),
+  });
+  const onChangePassword = () => {
+    if (!curPw) return Alert.alert(t("c.required"), t("c.set.enter_cur_pw"));
+    if (newPw.length < 6) return Alert.alert(t("c.set.too_short"), t("c.set.pw_min"));
+    changePassword.mutate();
+  };
+
+  const { logout } = useAuthStore();
+  const [delOpen, setDelOpen] = useState(false);
+  const [delPw, setDelPw] = useState("");
+  const deleteAccount = useMutation({
+    mutationFn: () => apiFetch("/users/delete-account", { method: "POST", body: { password: delPw } }),
+    onSuccess: async () => {
+      await logout();
+      router.replace("/login");
+      // Confirmation that the deletion went through (and what happens next).
+      Alert.alert(t("c.set.del_done_title"), t("c.set.del_done_msg"));
+    },
+    onError: (e: any) => Alert.alert(t("c.set.del_fail"), e.message),
+  });
+  const onDelete = () => {
+    if (!delPw) return Alert.alert(t("c.required"), t("c.set.enter_pw_confirm"));
+    Alert.alert(
+      t("c.set.del_title"),
+      t("c.set.del_msg"),
+      [
+        { text: t("c.cancel"), style: "cancel" },
+        { text: t("c.delete"), style: "destructive", onPress: () => deleteAccount.mutate() },
+      ],
+    );
+  };
 
   const updateProfile = useMutation({
     mutationFn: (body: object) => apiFetch("/users/profile", { method: "PATCH", body }),
@@ -102,17 +165,17 @@ export default function Settings() {
       // A changed weight is logged as a weigh-in, so progress and history move too.
       qc.invalidateQueries({ queryKey: ["avatar-progress"] });
       qc.invalidateQueries({ queryKey: ["weight-history"] });
-      Alert.alert("Saved", "Your preferences have been updated");
+      Alert.alert(t("c.set.saved"), t("c.set.saved_msg"));
     },
-    onError: (e: any) => Alert.alert("Error", e.message),
+    onError: (e: any) => Alert.alert(t("c.error"), e.message),
   });
 
   const save = () => {
     const errors: Partial<Record<LimitKey, string>> = {};
-    const ageErr    = validateNumericField(form.age,              "age");
-    const heightErr = validateNumericField(form.height_cm,        "height");
-    const weightErr = validateNumericField(form.weight_kg,        "weight");
-    const targetErr = validateNumericField(form.target_weight_kg, "target");
+    const ageErr    = validateNumericField(form.age,              "age", t);
+    const heightErr = validateNumericField(form.height_cm,        "height", t);
+    const weightErr = validateNumericField(form.weight_kg,        "weight", t);
+    const targetErr = validateNumericField(form.target_weight_kg, "target", t);
     if (ageErr)    errors.age    = ageErr;
     if (heightErr) errors.height = heightErr;
     if (weightErr) errors.weight = weightErr;
@@ -141,7 +204,7 @@ export default function Settings() {
       style={[styles.chip, active && styles.chipActive]}
     >
       <Text style={[styles.chipText, active && styles.chipTextActive]}>
-        {label.replace("_", " ")}
+        {t("c.opt." + label)}
       </Text>
     </TouchableOpacity>
   );
@@ -152,7 +215,7 @@ export default function Settings() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={styles.title}>{t("c.set.title")}</Text>
         <View style={{ width: 28 }} />
       </View>
       <KeyboardAvoidingView
@@ -160,17 +223,17 @@ export default function Settings() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={styles.section}>ACCOUNT</Text>
+          <Text style={styles.section}>{t("c.set.account")}</Text>
           <View style={styles.linkCard}>
             <View>
-              <Text style={styles.linkLabel}>Phone number</Text>
+              <Text style={styles.linkLabel}>{t("c.set.phone")}</Text>
               <Text style={styles.linkSub}>
-                {user?.phone || "Not set"} · {user?.is_phone_verified ? "Verified" : "Unverified"}
+                {user?.phone || t("c.set.not_set")} · {user?.is_phone_verified ? t("c.set.verified") : t("c.set.unverified")}
               </Text>
             </View>
             <TouchableOpacity testID="change-phone-toggle" onPress={() => setChangingPhone((v) => !v)}>
               <Text style={{ color: COLORS.goldPremium, fontFamily: FONTS.bodyBold, fontSize: 13 }}>
-                {changingPhone ? "Cancel" : "Change"}
+                {changingPhone ? t("c.cancel") : t("c.change")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -182,7 +245,7 @@ export default function Settings() {
                 </View>
                 <TextInput
                   testID="change-phone-input"
-                  placeholder="10-digit mobile number"
+                  placeholder={t("c.set.phone_ph")}
                   placeholderTextColor={COLORS.textMuted}
                   keyboardType="number-pad"
                   maxLength={10}
@@ -200,7 +263,7 @@ export default function Settings() {
                 {phoneBusy ? (
                   <ActivityIndicator color={COLORS.onAccent} />
                 ) : (
-                  <Text style={styles.ctaText}>SEND VERIFICATION CODE</Text>
+                  <Text style={styles.ctaText}>{t("c.set.send_code")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -208,8 +271,8 @@ export default function Settings() {
 
           <View style={styles.linkCard}>
             <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={styles.linkLabel}>WhatsApp offers & updates</Text>
-              <Text style={styles.linkSub}>Receive occasional offers and news from FitX on WhatsApp</Text>
+              <Text style={styles.linkLabel}>{t("c.set.wa_title")}</Text>
+              <Text style={styles.linkSub}>{t("c.set.wa_sub")}</Text>
             </View>
             <Switch
               testID="marketing-toggle"
@@ -220,7 +283,40 @@ export default function Settings() {
             />
           </View>
 
-          <Text style={styles.section}>GENDER</Text>
+          <View style={styles.linkCard}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={styles.linkLabel}>{t("c.set.rem_title")}</Text>
+              <Text style={styles.linkSub}>{t("c.set.rem_sub")}</Text>
+            </View>
+            <Switch
+              testID="reminders-toggle"
+              value={remindersOn}
+              disabled={setReminders.isPending}
+              onValueChange={(v) => setReminders.mutate(v)}
+              trackColor={{ true: COLORS.goldPremium, false: COLORS.surface2 }}
+            />
+          </View>
+
+          <View style={styles.linkCard}>
+            <View>
+              <Text style={styles.linkLabel}>{t("c.set.password")}</Text>
+              <Text style={styles.linkSub}>{t("c.set.pw_sub")}</Text>
+            </View>
+            <TouchableOpacity testID="change-password-toggle" onPress={() => setPwOpen((v) => !v)}>
+              <Text style={{ color: COLORS.goldPremium, fontFamily: FONTS.bodyBold, fontSize: 13 }}>{pwOpen ? t("c.cancel") : t("c.change")}</Text>
+            </TouchableOpacity>
+          </View>
+          {pwOpen && (
+            <View style={{ marginBottom: 12 }}>
+              <TextInput testID="current-password" placeholder={t("c.set.cur_pw_ph")} placeholderTextColor={COLORS.textMuted} secureTextEntry value={curPw} onChangeText={setCurPw} style={[styles.field, { marginBottom: 10 }]} />
+              <TextInput testID="new-password" placeholder={t("c.set.new_pw_ph")} placeholderTextColor={COLORS.textMuted} secureTextEntry value={newPw} onChangeText={setNewPw} style={styles.field} />
+              <TouchableOpacity testID="change-password-submit" style={[styles.cta, { marginTop: 10 }]} onPress={onChangePassword} disabled={changePassword.isPending}>
+                {changePassword.isPending ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.ctaText}>{t("c.set.update_pw")}</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Text style={styles.section}>{t("c.set.gender")}</Text>
           <View style={styles.row}>
             {GENDERS.map((g) => (
               <Chip
@@ -233,37 +329,37 @@ export default function Settings() {
             ))}
           </View>
 
-          <Text style={styles.section}>BODY METRICS</Text>
+          <Text style={styles.section}>{t("c.set.body_metrics")}</Text>
           <Field
-            label={`Age (${LIMITS.age.min}–${LIMITS.age.max} yrs)`}
+            label={t("c.set.lbl_age").replace("{min}", String(LIMITS.age.min)).replace("{max}", String(LIMITS.age.max))}
             value={form.age}
             tid="set-age"
             error={fieldErrors.age}
             onChange={(v) => { setFieldErrors((e) => ({ ...e, age: undefined })); setForm({ ...form, age: v.replace(/[^0-9]/g, "") }); }}
           />
           <Field
-            label={`Height (${LIMITS.height.min}–${LIMITS.height.max} cm)`}
+            label={t("c.set.lbl_height").replace("{min}", String(LIMITS.height.min)).replace("{max}", String(LIMITS.height.max))}
             value={form.height_cm}
             tid="set-height"
             error={fieldErrors.height}
             onChange={(v) => { setFieldErrors((e) => ({ ...e, height: undefined })); setForm({ ...form, height_cm: v.replace(/[^0-9.]/g, "") }); }}
           />
           <Field
-            label={`Weight (${LIMITS.weight.min}–${LIMITS.weight.max} kg)`}
+            label={t("c.set.lbl_weight").replace("{min}", String(LIMITS.weight.min)).replace("{max}", String(LIMITS.weight.max))}
             value={form.weight_kg}
             tid="set-weight"
             error={fieldErrors.weight}
             onChange={(v) => { setFieldErrors((e) => ({ ...e, weight: undefined })); setForm({ ...form, weight_kg: v.replace(/[^0-9.]/g, "") }); }}
           />
           <Field
-            label={`Target Weight (${LIMITS.target.min}–${LIMITS.target.max} kg)`}
+            label={t("c.set.lbl_target").replace("{min}", String(LIMITS.target.min)).replace("{max}", String(LIMITS.target.max))}
             value={form.target_weight_kg}
             tid="set-target"
             error={fieldErrors.target}
             onChange={(v) => { setFieldErrors((e) => ({ ...e, target: undefined })); setForm({ ...form, target_weight_kg: v.replace(/[^0-9.]/g, "") }); }}
           />
 
-          <Text style={styles.section}>GOAL</Text>
+          <Text style={styles.section}>{t("c.set.goal")}</Text>
           <View style={styles.row}>
             {GOALS.map((g) => (
               <Chip
@@ -276,7 +372,7 @@ export default function Settings() {
             ))}
           </View>
 
-          <Text style={styles.section}>WORKOUT LEVEL</Text>
+          <Text style={styles.section}>{t("c.set.level")}</Text>
           <View style={styles.row}>
             {LEVELS.map((l) => (
               <Chip
@@ -289,7 +385,7 @@ export default function Settings() {
             ))}
           </View>
 
-          <Text style={styles.section}>DIET PREFERENCE</Text>
+          <Text style={styles.section}>{t("c.set.diet")}</Text>
           <View style={styles.row}>
             {DIETS.map((d) => (
               <Chip
@@ -302,16 +398,16 @@ export default function Settings() {
             ))}
           </View>
 
-          <Text style={styles.section}>SUBSCRIPTION</Text>
+          <Text style={styles.section}>{t("c.set.subscription")}</Text>
           <TouchableOpacity
             testID="manage-sub"
             style={styles.linkCard}
             onPress={() => router.push("/subscription" as any)}
           >
             <View>
-              <Text style={styles.linkLabel}>Manage Subscription</Text>
+              <Text style={styles.linkLabel}>{t("c.set.manage_sub")}</Text>
               <Text style={styles.linkSub}>
-                Current: {(user?.subscription || "trial").toUpperCase()}
+                {t("c.set.current")}: {(user?.subscription || "trial").toUpperCase()}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={22} color={COLORS.goldPremium} />
@@ -339,15 +435,15 @@ export default function Settings() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.section}>LEGAL</Text>
+          <Text style={styles.section}>{t("c.set.legal")}</Text>
           <TouchableOpacity
             testID="open-privacy"
             style={styles.linkCard}
             onPress={() => router.push("/privacy" as any)}
           >
             <View>
-              <Text style={styles.linkLabel}>Privacy Policy</Text>
-              <Text style={styles.linkSub}>How we handle your data</Text>
+              <Text style={styles.linkLabel}>{t("c.set.privacy")}</Text>
+              <Text style={styles.linkSub}>{t("c.set.privacy_sub")}</Text>
             </View>
             <Ionicons name="chevron-forward" size={22} color={COLORS.goldPremium} />
           </TouchableOpacity>
@@ -357,12 +453,30 @@ export default function Settings() {
             onPress={() => router.push("/terms" as any)}
           >
             <View>
-              <Text style={styles.linkLabel}>Terms of Service</Text>
-              <Text style={styles.linkSub}>Usage agreement</Text>
+              <Text style={styles.linkLabel}>{t("c.set.terms")}</Text>
+              <Text style={styles.linkSub}>{t("c.set.terms_sub")}</Text>
             </View>
             <Ionicons name="chevron-forward" size={22} color={COLORS.goldPremium} />
           </TouchableOpacity>
-          <Text style={styles.versionText}>FitX · v1.0.0</Text>
+          <Text style={styles.section}>{t("c.set.danger")}</Text>
+          <View style={[styles.linkCard, { borderColor: COLORS.error }]}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={[styles.linkLabel, { color: COLORS.error }]}>{t("c.set.del_account")}</Text>
+              <Text style={styles.linkSub}>{t("c.set.del_sub")}</Text>
+            </View>
+            <TouchableOpacity testID="delete-account-toggle" onPress={() => setDelOpen((v) => !v)}>
+              <Text style={{ color: COLORS.error, fontFamily: FONTS.bodyBold, fontSize: 13 }}>{delOpen ? t("c.cancel") : t("c.delete")}</Text>
+            </TouchableOpacity>
+          </View>
+          {delOpen && (
+            <View style={{ marginBottom: 12 }}>
+              <TextInput testID="delete-password" placeholder={t("c.set.del_pw_ph")} placeholderTextColor={COLORS.textMuted} secureTextEntry value={delPw} onChangeText={setDelPw} style={styles.field} />
+              <TouchableOpacity testID="delete-account-submit" style={[styles.cta, { marginTop: 10, backgroundColor: COLORS.error }]} onPress={onDelete} disabled={deleteAccount.isPending}>
+                {deleteAccount.isPending ? <ActivityIndicator color="#fff" /> : <Text style={[styles.ctaText, { color: "#fff" }]}>{t("c.set.del_btn")}</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
+          <Text style={styles.versionText}>FitX · v{Constants.expoConfig?.version ?? ""}</Text>
         </ScrollView>
         <SafeAreaView edges={["bottom"]}>
           <View style={styles.footer}>
@@ -375,7 +489,7 @@ export default function Settings() {
               {updateProfile.isPending ? (
                 <ActivityIndicator color={COLORS.onAccent} />
               ) : (
-                <Text style={styles.ctaText}>SAVE CHANGES</Text>
+                <Text style={styles.ctaText}>{t("c.set.save")}</Text>
               )}
             </TouchableOpacity>
           </View>

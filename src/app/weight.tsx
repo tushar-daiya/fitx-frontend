@@ -1,3 +1,4 @@
+import { useT } from "@/src/store/i18n";
 import React, { useState } from "react";
 import {
   View,
@@ -27,11 +28,12 @@ const fmtDay = (d: string) =>
   new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
 function Chart({ items, target }: { items: WeightEntry[]; target: number | null }) {
+  const t = useT();
   const [w, setW] = useState(0);
   if (items.length < 2) {
     return (
       <View style={styles.chartEmpty}>
-        <Text style={styles.muted}>Log your weight again later to see your trend.</Text>
+        <Text style={styles.muted}>{t("b.w.chartEmpty")}</Text>
       </View>
     );
   }
@@ -73,6 +75,7 @@ function Chart({ items, target }: { items: WeightEntry[]; target: number | null 
 }
 
 export default function Weight() {
+  const t = useT();
   const router = useRouter();
   const history = useWeightHistory();
   const logWeight = useLogWeight();
@@ -89,21 +92,21 @@ export default function Weight() {
 
   const onSave = () => {
     const kg = parseFloat(value);
-    if (isNaN(kg) || kg < 20 || kg > 500) return setError("Enter a weight between 20 and 500 kg");
+    if (isNaN(kg) || kg < 20 || kg > 500) return setError(t("b.w.errRange"));
     setError(null);
     logWeight.mutate(kg, {
       onSuccess: () => setValue(""),
-      onError: (e: any) => Alert.alert("Couldn't save", e.message),
+      onError: (e: any) => Alert.alert(t("b.w.cantSave"), e.message),
     });
   };
 
   const onDelete = (e: WeightEntry) =>
-    Alert.alert("Delete entry?", `${e.weight_kg} kg on ${fmtDay(e.date)}`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("b.w.delQ"), t("b.w.delMsg").replace("{kg}", String(e.weight_kg)).replace("{date}", fmtDay(e.date)), [
+      { text: t("b.w.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("b.w.delete"),
         style: "destructive",
-        onPress: () => deleteWeight.mutate(e.id, { onError: (err: any) => Alert.alert("Couldn't delete", err.message) }),
+        onPress: () => deleteWeight.mutate(e.id, { onError: (err: any) => Alert.alert(t("b.w.cantDelete"), err.message) }),
       },
     ]);
 
@@ -113,7 +116,7 @@ export default function Weight() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Weight Log</Text>
+        <Text style={styles.title}>{t("b.w.title")}</Text>
         <View style={{ width: 28 }} />
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
@@ -123,13 +126,13 @@ export default function Weight() {
           ) : (
             <>
               <View style={styles.statsRow}>
-                <Stat label="START" value={start != null ? `${start} kg` : "—"} />
-                <Stat label="NOW" value={current != null ? `${current} kg` : "—"} />
-                <Stat label="GOAL" value={target != null ? `${target} kg` : "—"} />
+                <Stat label={t("b.w.start")} value={start != null ? `${start} kg` : "—"} />
+                <Stat label={t("b.w.now")} value={current != null ? `${current} kg` : "—"} />
+                <Stat label={t("b.w.goal")} value={target != null ? `${target} kg` : "—"} />
               </View>
               {change != null && items.length > 1 && (
                 <Text style={styles.changeText}>
-                  {change === 0 ? "No change yet" : `${change > 0 ? "+" : ""}${change.toFixed(1)} kg since you started`}
+                  {change === 0 ? t("b.w.noChange") : t("b.w.since").replace("{n}", `${change > 0 ? "+" : ""}${change.toFixed(1)}`)}
                 </Text>
               )}
 
@@ -137,26 +140,26 @@ export default function Weight() {
                 <Chart items={items} target={target} />
               </View>
 
-              <Text style={styles.section}>LOG TODAY'S WEIGHT</Text>
+              <Text style={styles.section}>{t("b.w.logToday")}</Text>
               <View style={styles.inputRow}>
                 <TextInput
                   testID="weight-input"
                   value={value}
                   onChangeText={(v) => { setError(null); setValue(v.replace(/[^0-9.]/g, "")); }}
-                  placeholder={current != null ? String(current) : "e.g. 72.5"}
+                  placeholder={current != null ? String(current) : t("b.w.ph")}
                   placeholderTextColor={COLORS.textMuted}
                   keyboardType="decimal-pad"
                   maxLength={5}
                   style={[styles.input, !!error && { borderColor: COLORS.error }]}
                 />
                 <TouchableOpacity testID="weight-save" style={styles.saveBtn} onPress={onSave} disabled={logWeight.isPending}>
-                  {logWeight.isPending ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.saveText}>SAVE</Text>}
+                  {logWeight.isPending ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.saveText}>{t("b.w.save")}</Text>}
                 </TouchableOpacity>
               </View>
               {error ? <Text style={styles.errText}>{error}</Text> : null}
-              <Text style={styles.hint}>Logging again on the same day replaces that day's entry. Your progress and calorie target use your latest weight.</Text>
+              <Text style={styles.hint}>{t("b.w.hint")}</Text>
 
-              <Text style={styles.section}>HISTORY</Text>
+              <Text style={styles.section}>{t("b.w.history")}</Text>
               {[...items].reverse().map((e) => (
                 <View key={e.id} style={styles.row}>
                   <Text style={styles.rowDate}>{fmtDay(e.date)}</Text>

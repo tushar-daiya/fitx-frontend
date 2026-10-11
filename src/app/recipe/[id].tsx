@@ -12,11 +12,13 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRecipe } from "@/src/hooks/useRecipes";
+import { useT } from "@/src/store/i18n";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const t = useT();
   const insets = useSafeAreaInsets();
   const { data: recipe, isLoading, error } = useRecipe(id ?? "");
 
@@ -58,20 +60,20 @@ export default function RecipeDetail() {
           <Text style={styles.title}>{recipe.title}</Text>
           <View style={styles.metaRow}>
             <Text style={styles.metaTag}>
-              {(recipe.diet || "").replace("_", " ").toUpperCase()}
+              {(recipe.diet ? (t("c.opt." + recipe.diet) !== "c.opt." + recipe.diet ? t("c.opt." + recipe.diet) : recipe.diet.replace("_", " ")) : "").toUpperCase()}
             </Text>
-            <Text style={styles.metaTag}>{recipe.cuisine || "Indian"}</Text>
+            <Text style={styles.metaTag}>{recipe.cuisine || t("c.rec.indian")}</Text>
           </View>
 
           <View style={styles.macroBar}>
-            <Macro label="KCAL" value={Math.round(recipe.calories)} />
-            <Macro label="PROTEIN" value={`${recipe.protein_g}g`} />
-            <Macro label="CARBS" value={`${recipe.carbs_g}g`} />
-            <Macro label="FATS" value={`${recipe.fats_g}g`} />
+            <Macro label={t("c.rec.kcal")} value={Math.round(recipe.calories)} />
+            <Macro label={t("c.rec.protein")} value={`${recipe.protein_g}g`} />
+            <Macro label={t("c.rec.carbs")} value={`${recipe.carbs_g}g`} />
+            <Macro label={t("c.rec.fats")} value={`${recipe.fats_g}g`} />
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>INGREDIENTS</Text>
+            <Text style={styles.sectionTitle}>{t("c.rec.ingredients")}</Text>
             {(recipe.ingredients || []).map((ing, i) => (
               <View key={i} style={styles.bulletRow}>
                 <View style={styles.bullet} />
@@ -79,12 +81,12 @@ export default function RecipeDetail() {
               </View>
             ))}
             {(recipe.ingredients || []).length === 0 && (
-              <Text style={styles.muted}>No ingredients listed.</Text>
+              <Text style={styles.muted}>{t("c.rec.no_ing")}</Text>
             )}
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>HOW TO COOK</Text>
+            <Text style={styles.sectionTitle}>{t("c.rec.how")}</Text>
             {(recipe.steps || []).map((step, i) => (
               <View key={i} style={styles.stepRow}>
                 <View style={styles.stepNum}>
@@ -94,7 +96,7 @@ export default function RecipeDetail() {
               </View>
             ))}
             {(recipe.steps || []).length === 0 && (
-              <Text style={styles.muted}>No steps listed.</Text>
+              <Text style={styles.muted}>{t("c.rec.no_steps")}</Text>
             )}
           </View>
         </View>

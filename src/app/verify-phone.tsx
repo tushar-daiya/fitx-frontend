@@ -17,6 +17,7 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
 import { AuthVideoBackground } from "@/src/AuthVideoBackground";
+import { useT } from "@/src/store/i18n";
 
 // Landing screen for existing users who don't yet have a verified phone on
 // file (the app is live and this field is new — see index.tsx's redirect
@@ -25,6 +26,7 @@ import { AuthVideoBackground } from "@/src/AuthVideoBackground";
 // one but never entered the code — skip straight to the OTP screen.
 export default function VerifyPhone() {
   const router = useRouter();
+  const t = useT();
   const { collectPhone, resendOtp, user } = useAuthStore();
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -52,7 +54,7 @@ export default function VerifyPhone() {
   }
 
   const onSubmit = async () => {
-    if (!phone) return Alert.alert("Required", "Enter your phone number");
+    if (!phone) return Alert.alert(t("a.required"), t("a.enterPhone"));
     setBusy(true);
     try {
       const fullPhone = `+91${phone.trim()}`;
@@ -62,7 +64,7 @@ export default function VerifyPhone() {
         params: { phone: fullPhone, purpose: "phone_verify" },
       });
     } catch (e: any) {
-      Alert.alert("Could not send code", e.message);
+      Alert.alert(t("a.vp.failed"), e.message);
     } finally {
       setBusy(false);
     }
@@ -75,9 +77,9 @@ export default function VerifyPhone() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Logo size={96} style={styles.logoImg} />
           <View style={styles.card}>
-            <Text style={styles.heading}>Verify your phone number</Text>
+            <Text style={styles.heading}>{t("a.vp.heading")}</Text>
             <Text style={styles.sub}>
-              We now require a verified phone number for account security and password recovery.
+              {t("a.vp.sub")}
             </Text>
 
             <View style={styles.phoneRow}>
@@ -86,7 +88,7 @@ export default function VerifyPhone() {
               </View>
               <TextInput
                 testID="verify-phone-input"
-                placeholder="10-digit mobile number"
+                placeholder={t("a.phoneHint")}
                 placeholderTextColor={COLORS.textMuted}
                 keyboardType="number-pad"
                 maxLength={10}
@@ -97,7 +99,7 @@ export default function VerifyPhone() {
             </View>
 
             <TouchableOpacity testID="verify-phone-submit" style={styles.primaryBtn} onPress={onSubmit} disabled={busy}>
-              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>SEND CODE</Text>}
+              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>{t("a.sendCode")}</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>

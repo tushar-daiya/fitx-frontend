@@ -22,6 +22,7 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS } from "@/src/theme";
 import { trackScreen, identifyUser, track } from "@/src/lib/analytics";
 import { storage } from "@/src/utils/storage";
+import { setPendingRoute } from "@/src/lib/pendingRoute";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -87,9 +88,15 @@ export default function RootLayout() {
   }, [userId]);
 
   useEffect(() => {
+    // Tapping a notification restarts the normal launch flow; reminders carry a
+    // `route` that index.tsx opens once the user has landed on Home.
+    const open = (r: Notifications.NotificationResponse) => {
+      setPendingRoute(r.notification.request.content.data?.route);
+      router.replace("/");
+    };
     const response = Notifications.getLastNotificationResponse();
-    if (response) router.replace("/");
-    const sub = Notifications.addNotificationResponseReceivedListener(() => router.replace("/"));
+    if (response) open(response);
+    const sub = Notifications.addNotificationResponseReceivedListener(open);
     return () => sub.remove();
   }, []);
 

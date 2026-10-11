@@ -4,9 +4,12 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
 import { COLORS, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
+import { takePendingRoute } from "@/src/lib/pendingRoute";
+import { useT } from "@/src/store/i18n";
 
 export default function Index() {
   const { user, loading } = useAuthStore();
+  const t = useT();
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -24,7 +27,11 @@ export default function Index() {
       if (!user) router.replace("/login");
       else if (!user.is_phone_verified) router.replace("/verify-phone");
       else if (!user.onboarded) router.replace("/onboarding");
-      else router.replace("/(tabs)/home");
+      else {
+        router.replace("/(tabs)/home");
+        const route = takePendingRoute();
+        if (route) setTimeout(() => router.push(route as any), 100);
+      }
     }, 800);
     return () => clearTimeout(delay);
   }, [loading, user]);
@@ -33,7 +40,7 @@ export default function Index() {
     <Animated.View style={[styles.container, { opacity: fadeAnim }]} testID="splash-screen">
       <Logo size={160} style={styles.logo} />
       <Text style={styles.brand}>FitX</Text>
-      <Text style={styles.tag}>Elevate Your Fitness Journey</Text>
+      <Text style={styles.tag}>{t("a.tagline")}</Text>
 
       <View style={styles.dotsRow}>
         {[0, 1, 2].map((i) => (

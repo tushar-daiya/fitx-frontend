@@ -3,17 +3,19 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useT } from "@/src/store/i18n";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 
 export default function Privacy() {
   const router = useRouter();
+  const t = useT();
   return (
     <SafeAreaView style={styles.container} testID="privacy-screen" edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={COLORS.goldPremium} />
         </TouchableOpacity>
-        <Text style={styles.title}>Privacy Policy</Text>
+        <Text style={styles.title}>{t("c.set.privacy")}</Text>
         <View style={{ width: 28 }} />
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>

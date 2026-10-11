@@ -17,6 +17,7 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
 import { AuthVideoBackground } from "@/src/AuthVideoBackground";
+import { useT } from "@/src/store/i18n";
 
 const RESEND_COOLDOWN_S = 30;
 
@@ -24,6 +25,7 @@ type Purpose = "signup" | "phone_verify" | "reset" | "phone_change";
 
 export default function VerifyOtp() {
   const router = useRouter();
+  const t = useT();
   const params = useLocalSearchParams<{ phone: string; purpose: Purpose }>();
   const phone = params.phone ?? "";
   const purpose = (params.purpose as Purpose) ?? "signup";
@@ -40,7 +42,7 @@ export default function VerifyOtp() {
   }, [cooldown]);
 
   const onVerify = async () => {
-    if (otp.length < 4) return Alert.alert("Required", "Enter the code you received");
+    if (otp.length < 4) return Alert.alert(t("a.required"), t("a.otp.enterCode"));
     setBusy(true);
     try {
       if (purpose === "signup") {
@@ -53,10 +55,10 @@ export default function VerifyOtp() {
         router.replace({ pathname: "/reset-password", params: { phone, otp } });
       } else {
         await changePhoneVerify(phone, otp);
-        Alert.alert("Phone number updated", "", [{ text: "OK", onPress: () => router.back() }]);
+        Alert.alert(t("a.otp.phoneUpdated"), "", [{ text: t("a.ok"), onPress: () => router.back() }]);
       }
     } catch (e: any) {
-      Alert.alert("Verification failed", e.message);
+      Alert.alert(t("a.otp.failed"), e.message);
     } finally {
       setBusy(false);
     }
@@ -68,7 +70,7 @@ export default function VerifyOtp() {
       await resendOtp(phone);
       setCooldown(RESEND_COOLDOWN_S);
     } catch (e: any) {
-      Alert.alert("Could not resend", e.message);
+      Alert.alert(t("a.otp.resendFail"), e.message);
     }
   };
 
@@ -79,12 +81,12 @@ export default function VerifyOtp() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Logo size={96} style={styles.logoImg} />
           <View style={styles.card}>
-            <Text style={styles.heading}>Verify your phone</Text>
-            <Text style={styles.sub}>Enter the code sent to {phone}</Text>
+            <Text style={styles.heading}>{t("a.otp.heading")}</Text>
+            <Text style={styles.sub}>{t("a.otp.sub").replace("{phone}", phone)}</Text>
 
             <TextInput
               testID="otp-code"
-              placeholder="Enter code"
+              placeholder={t("a.otp.ph")}
               placeholderTextColor={COLORS.textMuted}
               keyboardType="number-pad"
               value={otp}
@@ -94,7 +96,7 @@ export default function VerifyOtp() {
             />
 
             <TouchableOpacity testID="otp-submit" style={styles.primaryBtn} onPress={onVerify} disabled={busy}>
-              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>VERIFY</Text>}
+              {busy ? <ActivityIndicator color={COLORS.onAccent} /> : <Text style={styles.primaryBtnText}>{t("a.otp.verify")}</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -104,7 +106,7 @@ export default function VerifyOtp() {
               style={{ marginTop: 18, alignItems: "center" }}
             >
               <Text style={[styles.linkText, cooldown > 0 && { opacity: 0.5 }]}>
-                {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+                {cooldown > 0 ? t("a.otp.resendIn").replace("{s}", String(cooldown)) : t("a.otp.resend")}
               </Text>
             </TouchableOpacity>
           </View>

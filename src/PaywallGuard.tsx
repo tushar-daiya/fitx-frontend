@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import { useSubscriptionPlans, useSubscriptionStatus } from "@/src/hooks/useSubscription";
 import { useAuthStore } from "@/src/store/auth";
+import { useT } from "@/src/store/i18n";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
 
 export function PaywallGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
   const router = useRouter();
+  const t = useT();
   const segments = useSegments();
   const { data: status } = useSubscriptionStatus(!!user);
   const { data: plans } = useSubscriptionPlans();
@@ -47,8 +49,8 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
     paid.find((p) => p.popular) ?? paid.find((p) => p.id === "3m") ?? paid[0];
   const months = featured ? Math.round(featured.days / 30) : 0;
   const featuredNote = featured
-    ? `₹${featured.price} for ${months === 1 ? "1 month" : `${months} months`} · UPI or card · Instant unlock`
-    : "UPI or card · Instant unlock";
+    ? t("c.pw.featured").replace("{price}", String(featured.price)).replace("{period}", months === 1 ? t("c.pw.1month") : t("c.pw.months").replace("{n}", String(months)))
+    : t("c.pw.upi");
   const hadAnyPlan = hadTrial || (status?.history.length ?? 0) > 0;
 
   return (
@@ -59,16 +61,16 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
           <View style={styles.card}>
             <Logo size={104} style={styles.logo} />
             <Text style={styles.title}>
-              {hadTrial ? "Trial Expired" : hadAnyPlan ? "Plan Expired" : "Unlock FitX"}
+              {hadTrial ? t("c.pw.trial_expired") : hadAnyPlan ? t("c.pw.plan_expired") : t("c.pw.unlock")}
             </Text>
             <Text style={styles.body}>
               {hadTrial
-                ? `Your ${trialDays}-day free trial has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked.`
+                ? t("c.pw.body_trial").replace("{n}", String(trialDays))
                 : hadAnyPlan
-                ? "Your plan has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked."
+                ? t("c.pw.body_plan")
                 : trialPlan
-                ? `Start your ${trialDays}-day free trial or pick a plan to unlock your AI workouts, diet plans, meal scanner and coach.`
-                : "Pick a plan to unlock your AI workouts, diet plans, meal scanner and coach."}
+                ? t("c.pw.body_start").replace("{n}", String(trialDays))
+                : t("c.pw.body_pick")}
             </Text>
             <TouchableOpacity
               testID="paywall-cta"
@@ -76,14 +78,14 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
               onPress={() => router.replace("/subscription" as any)}
             >
               <Text style={styles.ctaText}>
-                {hadAnyPlan ? "CHOOSE A PLAN" : "GET STARTED"}
+                {hadAnyPlan ? t("c.pw.choose") : t("c.pw.get_started")}
               </Text>
             </TouchableOpacity>
             <Text style={styles.note}>
               {hadAnyPlan
                 ? featuredNote
                 : trialPlan
-                ? `${trialDays}-day free trial · No charge · Cancel anytime`
+                ? t("c.pw.note_trial").replace("{n}", String(trialDays))
                 : featuredNote}
             </Text>
           </View>

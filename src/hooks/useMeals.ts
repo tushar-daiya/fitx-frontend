@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/src/lib/api";
-import type { MealsToday, ScanResult, MealLog, MealType } from "@/src/types/api";
+import type { MealsHistory, MealsToday, ScanResult, MealLog, MealType } from "@/src/types/api";
 
 export type MealInput = {
   name: string;
@@ -23,10 +23,17 @@ export const useMealsToday = () =>
     staleTime: 60_000,
   });
 
-export const useMealsForDay = (date: string) =>
+export const useMealsForDay = (date: string, enabled = true) =>
   useQuery({
     queryKey: ["meals-day", date],
     queryFn: () => apiFetch<MealsToday>(`/meals/day/${date}`),
+    enabled: enabled && !!date,
+  });
+
+export const useMealsHistory = (days = 14) =>
+  useQuery({
+    queryKey: ["meals-history", days],
+    queryFn: () => apiFetch<MealsHistory>(`/meals/history?days=${days}`),
   });
 
 export const useScanMeal = () =>
@@ -44,6 +51,7 @@ const useInvalidateMeals = () => {
   return () => {
     qc.invalidateQueries({ queryKey: ["meals-today"] });
     qc.invalidateQueries({ queryKey: ["meals-day"] });
+    qc.invalidateQueries({ queryKey: ["meals-history"] });
   };
 };
 
