@@ -90,9 +90,9 @@ export default function Onboarding() {
     onSuccess: async () => {
       track("onboarding_complete", { goal, level, diet, gender });
       await refresh();
-      // No plan is granted at signup — send the user to the trial screen to
-      // explicitly start their free trial before entering the app.
-      router.replace("/start-trial");
+      // No plan is granted at signup — send the user to the plans screen
+      // (first-run mode) to start the free trial or buy any plan directly.
+      router.replace({ pathname: "/subscription", params: { firstRun: "1" } } as any);
     },
     onError: (e: any) => Alert.alert("Error", e.message),
   });

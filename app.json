@@ -11,6 +11,7 @@
     "description": "AI personal trainer & nutritionist. Personalized workout + diet plans, meal scanner, fitness coach.",
     "ios": {
       "supportsTablet": true,
+      "icon": "./assets/images/icon-ios.png",
       "version": "2.0.4",
       "bundleIdentifier": "com.fitx.health.app",
       "buildNumber": "9",
@@ -109,7 +110,9 @@
       "expo-font",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-speech-recognition"
+      "expo-speech-recognition",
+      "expo-video",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -19,9 +19,11 @@ export type FitXUser = {
   role: "user" | "admin";
   onboarded: boolean;
   profile: UserProfile | null;
-  subscription: "trial" | "3m" | "6m" | "12m" | "none";
+  subscription: "trial" | "1m" | "3m" | "6m" | "12m" | "none";
   trial_ends: string;
   trial_used: boolean;
+  // Absent on accounts that predate the flag, which count as opted in.
+  marketing_opt_in?: boolean;
   created_at: string;
 };
 
@@ -32,12 +34,13 @@ export type AuthResponse = {
 
 export type PreAuthResponse = {
   pre_auth_token: string;
+  referral_applied?: boolean;
   phone_verification_required?: true;
   phone: string | null;
 };
 
 // ── Subscription ──────────────────────────────────────────────────────────
-export type PlanId = "trial" | "3m" | "6m" | "12m";
+export type PlanId = "trial" | "1m" | "3m" | "6m" | "12m";
 
 export type SubscriptionPlan = {
   id: PlanId;
@@ -47,6 +50,11 @@ export type SubscriptionPlan = {
   days: number;
   perks: string[];
   popular?: boolean;
+  /** Added by backend; may be missing on older servers (treat id==="trial" as trial). */
+  is_trial?: boolean;
+  price_usd?: number | null;
+  badge?: string | null;
+  sort_order?: number;
 };
 
 export type ActivePlan = {
@@ -168,6 +176,7 @@ export type MealLog = {
   meal_type: MealType;
   is_cheat: boolean;
   image_base64: string | null;
+  source?: "ai" | "manual";
 };
 
 export type MealTotals = {
@@ -207,6 +216,10 @@ export type AvatarProgress = {
   muscle: number;
   days: number;
   estimated_kg_change: number;
+  days_logged?: number;
+  source?: "weighins" | "estimate";
+  start_weight_kg?: number;
+  current_weight_kg?: number;
   goal: string;
   gender: "male" | "female" | "other";
 };
@@ -327,4 +340,35 @@ export type NotificationResponse = {
   sent: number;
   failed: number;
   invalid_tokens_removed: number;
+};
+
+// ── Referrals ─────────────────────────────────────────────────────────────
+export type ReferralEarningsByCurrency = Record<string, { pending: number; paid: number }>;
+
+export type ReferralSummary = {
+  enabled: boolean;
+  code: string;
+  link: string | null;
+  commission_pct: number;
+  signed_up: number;
+  converted: number;
+  earnings: ReferralEarningsByCurrency;
+};
+
+export type ReferralItem = {
+  name: string;
+  status: "signed_up" | "converted";
+  joined_at: string;
+  purchases: number;
+  earned: { currency: string; amount: number; plan: string; status: "pending" | "paid"; at: string }[];
+};
+
+// ── Weight log ────────────────────────────────────────────────────────────
+export type WeightEntry = { id: string; date: string; weight_kg: number };
+
+export type WeightHistory = {
+  items: WeightEntry[];
+  start_weight_kg: number | null;
+  current_weight_kg: number | null;
+  target_weight_kg: number | null;
 };

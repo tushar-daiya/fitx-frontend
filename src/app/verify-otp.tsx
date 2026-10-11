@@ -16,6 +16,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
+import { AuthVideoBackground } from "@/src/AuthVideoBackground";
 
 const RESEND_COOLDOWN_S = 30;
 
@@ -72,6 +73,7 @@ export default function VerifyOtp() {
   };
 
   return (
+    <AuthVideoBackground>
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -109,11 +111,12 @@ export default function VerifyOtp() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </AuthVideoBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
   scroll: { flexGrow: 1, padding: SPACING.l, justifyContent: "center" },
   logoImg: { alignSelf: "center", marginBottom: 8 },
   card: {

@@ -71,7 +71,7 @@ export default function Home() {
         </View>
 
         {/* Hero avatar */}
-        <View style={styles.heroCard}>
+        <TouchableOpacity testID="progress-card" activeOpacity={0.85} onPress={() => router.push("/weight" as any)} style={styles.heroCard}>
           <Avatar
             gender={user?.profile?.gender || "male"}
             leanness={progress.leanness}
@@ -91,7 +91,7 @@ export default function Home() {
               Day {(progress as any).days || 1} · {(progress as any).goal?.replace("_", " ") || ""}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Calorie ring */}
         <View style={styles.card}>
@@ -140,6 +140,14 @@ export default function Home() {
           >
             <Ionicons name="camera" size={20} color={COLORS.onAccent} />
             <Text style={styles.actionBtnText}>SCAN MEAL</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="quick-log"
+            style={styles.actionBtnAlt}
+            onPress={() => router.push("/log-meal" as any)}
+          >
+            <Ionicons name="add-circle" size={20} color={COLORS.goldPremium} />
+            <Text style={styles.actionBtnAltText}>LOG FOOD</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="quick-recipes"
@@ -254,9 +262,10 @@ const styles = StyleSheet.create({
   miniBar: { height: 4, backgroundColor: COLORS.border, borderRadius: 2, marginTop: 10 },
   miniFill: { height: 4, backgroundColor: COLORS.goldPremium },
   addHint: { color: COLORS.goldMuted, fontSize: 10, marginTop: 8, fontFamily: FONTS.body },
-  actions: { flexDirection: "row", gap: 12, marginBottom: 16 },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 16 },
   actionBtn: {
     flex: 1,
+    minWidth: "45%",
     backgroundColor: COLORS.goldPremium,
     borderRadius: RADIUS.pill,
     paddingVertical: 14,
@@ -268,6 +277,7 @@ const styles = StyleSheet.create({
   actionBtnText: { color: COLORS.onAccent, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
   actionBtnAlt: {
     flex: 1,
+    minWidth: "45%",
     backgroundColor: "transparent",
     borderRadius: RADIUS.pill,
     paddingVertical: 14,

@@ -11,7 +11,9 @@ export const useSubscriptionPlans = () =>
   useQuery({
     queryKey: ["subscription-plans"],
     queryFn: () => apiFetch<SubscriptionPlan[]>("/subscription/plans"),
-    staleTime: 10 * 60_000,
+    // Plans are admin-editable, so refetch whenever a screen using them mounts.
+    staleTime: 30_000,
+    refetchOnMount: "always",
   });
 
 export const useSubscriptionStatus = (enabled = true) =>

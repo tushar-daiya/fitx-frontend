@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { useRouter, useSegments } from "expo-router";
-import { useSubscriptionStatus } from "@/src/hooks/useSubscription";
+import { useSubscriptionPlans, useSubscriptionStatus } from "@/src/hooks/useSubscription";
 import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
@@ -11,6 +11,7 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
   const { data: status } = useSubscriptionStatus(!!user);
+  const { data: plans } = useSubscriptionPlans();
 
   // Note: the `trial_ended` analytics event is emitted server-side (see the
   // backend trial sweep) so it fires even for users who never reopen the app.
@@ -38,6 +39,16 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
   // because they never opted into a plan after onboarding. Adapt the copy so we
   // don't tell someone their trial ended when they never started one.
   const hadTrial = !!status?.history.some((h) => h.plan === "trial");
+  const trialPlan = plans?.find((p) => p.is_trial || p.id === "trial");
+  const trialDays = trialPlan?.days ?? 7;
+  // Highlight the popular paid plan (else 3m, else cheapest paid) in the note.
+  const paid = (plans ?? []).filter((p) => !(p.is_trial || p.id === "trial"));
+  const featured =
+    paid.find((p) => p.popular) ?? paid.find((p) => p.id === "3m") ?? paid[0];
+  const months = featured ? Math.round(featured.days / 30) : 0;
+  const featuredNote = featured
+    ? `₹${featured.price} for ${months === 1 ? "1 month" : `${months} months`} · UPI or card · Instant unlock`
+    : "UPI or card · Instant unlock";
   const hadAnyPlan = hadTrial || (status?.history.length ?? 0) > 0;
 
   return (
@@ -52,10 +63,12 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
             </Text>
             <Text style={styles.body}>
               {hadTrial
-                ? "Your 7-day free trial has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked."
+                ? `Your ${trialDays}-day free trial has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked.`
                 : hadAnyPlan
                 ? "Your plan has ended. Choose a plan to keep your AI workouts, diet plans, meal scanner and coach unlocked."
-                : "Start your 7-day free trial or pick a plan to unlock your AI workouts, diet plans, meal scanner and coach."}
+                : trialPlan
+                ? `Start your ${trialDays}-day free trial or pick a plan to unlock your AI workouts, diet plans, meal scanner and coach.`
+                : "Pick a plan to unlock your AI workouts, diet plans, meal scanner and coach."}
             </Text>
             <TouchableOpacity
               testID="paywall-cta"
@@ -68,8 +81,10 @@ export function PaywallGuard({ children }: { children: React.ReactNode }) {
             </TouchableOpacity>
             <Text style={styles.note}>
               {hadAnyPlan
-                ? "₹1999 for 3 months · UPI or card · Instant unlock"
-                : "7-day free trial · No charge · Cancel anytime"}
+                ? featuredNote
+                : trialPlan
+                ? `${trialDays}-day free trial · No charge · Cancel anytime`
+                : featuredNote}
             </Text>
           </View>
         </View>

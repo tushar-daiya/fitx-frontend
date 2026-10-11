@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
+import { AuthVideoBackground } from "@/src/AuthVideoBackground";
 
 export default function Login() {
   const router = useRouter();
@@ -49,79 +50,81 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Logo size={112} style={styles.logoImg} />
-          <Text style={styles.brand}>FitX</Text>
-          <Text style={styles.tag}>Elevate Your Fitness Journey</Text>
+    <AuthVideoBackground>
+      <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+            <Logo size={112} style={styles.logoImg} />
+            <Text style={styles.brand}>FitX</Text>
+            <Text style={styles.tag}>Elevate Your Fitness Journey</Text>
 
-          <View style={styles.card}>
-            <Text style={styles.heading}>Welcome back</Text>
-            <Text style={styles.sub}>Sign in to continue your journey</Text>
+            <View style={styles.card}>
+              <Text style={styles.heading}>Welcome back</Text>
+              <Text style={styles.sub}>Sign in to continue your journey</Text>
 
-            <TextInput
-              testID="login-email"
-              placeholder="Email or phone number"
-              placeholderTextColor={COLORS.textMuted}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
-            />
-            <TextInput
-              testID="login-password"
-              placeholder="Password"
-              placeholderTextColor={COLORS.textMuted}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              style={styles.input}
-            />
+              <TextInput
+                testID="login-email"
+                placeholder="Email or phone number"
+                placeholderTextColor={COLORS.textMuted}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+                style={styles.input}
+              />
+              <TextInput
+                testID="login-password"
+                placeholder="Password"
+                placeholderTextColor={COLORS.textMuted}
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                style={styles.input}
+              />
 
-            <TouchableOpacity
-              testID="go-forgot-password"
-              onPress={() => router.push("/forgot-password")}
-              style={{ alignItems: "flex-end", marginBottom: SPACING.s }}
-            >
-              <Text style={styles.linkText}>Forgot password?</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                testID="go-forgot-password"
+                onPress={() => router.push("/forgot-password")}
+                style={{ alignItems: "flex-end", marginBottom: SPACING.s }}
+              >
+                <Text style={styles.linkText}>Forgot password?</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              testID="login-submit"
-              style={styles.primaryBtn}
-              onPress={onLogin}
-              disabled={busy}
-            >
-              {busy ? (
-                <ActivityIndicator color={COLORS.onAccent} />
-              ) : (
-                <Text style={styles.primaryBtnText}>SIGN IN</Text>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                testID="login-submit"
+                style={styles.primaryBtn}
+                onPress={onLogin}
+                disabled={busy}
+              >
+                {busy ? (
+                  <ActivityIndicator color={COLORS.onAccent} />
+                ) : (
+                  <Text style={styles.primaryBtnText}>SIGN IN</Text>
+                )}
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              testID="go-signup"
-              onPress={() => router.push("/signup")}
-              style={{ marginTop: 18, alignItems: "center" }}
-            >
-              <Text style={styles.linkText}>
-                New here? <Text style={{ color: COLORS.goldPremium }}>Create account</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <TouchableOpacity
+                testID="go-signup"
+                onPress={() => router.push("/signup")}
+                style={{ marginTop: 18, alignItems: "center" }}
+              >
+                <Text style={styles.linkText}>
+                  New here? <Text style={{ color: COLORS.goldPremium }}>Create account</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AuthVideoBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
   scroll: { flexGrow: 1, padding: SPACING.l, justifyContent: "center" },
   logoImg: { alignSelf: "center", marginBottom: 8 },
   brand: {

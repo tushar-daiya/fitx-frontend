@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "@/src/store/auth";
 import { COLORS, RADIUS, SPACING, FONTS } from "@/src/theme";
 import { Logo } from "@/src/Logo";
+import { AuthVideoBackground } from "@/src/AuthVideoBackground";
 
 // Landing screen for existing users who don't yet have a verified phone on
 // file (the app is live and this field is new — see index.tsx's redirect
@@ -42,9 +43,11 @@ export default function VerifyPhone() {
 
   if (user?.phone) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator color={COLORS.goldPremium} style={{ marginTop: 40 }} />
-      </SafeAreaView>
+      <AuthVideoBackground>
+        <SafeAreaView style={styles.container}>
+          <ActivityIndicator color={COLORS.goldPremium} style={{ marginTop: 40 }} />
+        </SafeAreaView>
+      </AuthVideoBackground>
     );
   }
 
@@ -66,6 +69,7 @@ export default function VerifyPhone() {
   };
 
   return (
+    <AuthVideoBackground>
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -99,11 +103,12 @@ export default function VerifyPhone() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </AuthVideoBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
   scroll: { flexGrow: 1, padding: SPACING.l, justifyContent: "center" },
   logoImg: { alignSelf: "center", marginBottom: 8 },
   card: {

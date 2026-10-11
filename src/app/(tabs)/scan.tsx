@@ -12,11 +12,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useScanMeal, useLogMeal } from "@/src/hooks/useMeals";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import type { ScanResult } from "@/src/types/api";
 
 export default function Scan() {
+  const router = useRouter();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageB64, setImageB64] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -116,6 +118,15 @@ export default function Scan() {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          testID="manual-log-btn"
+          style={styles.manualLink}
+          onPress={() => router.push("/log-meal" as any)}
+        >
+          <Ionicons name="create-outline" size={18} color={COLORS.goldPremium} />
+          <Text style={styles.manualLinkText}>Enter calories manually</Text>
+        </TouchableOpacity>
+
         {imageUri && !result && (
           <TouchableOpacity
             testID="analyze-btn"
@@ -199,6 +210,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionBtnAltText: { color: COLORS.goldPremium, fontWeight: "800", letterSpacing: 1, fontFamily: FONTS.bodyBold },
+  manualLink: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 16, paddingVertical: 8 },
+  manualLinkText: { color: COLORS.goldPremium, fontFamily: FONTS.bodyBold, fontSize: 14 },
   primary: {
     backgroundColor: COLORS.goldPremium,
     paddingVertical: 16,

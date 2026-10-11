@@ -89,6 +89,18 @@ export default function Profile() {
             onPress={() => router.push("/subscription" as any)}
           />
           <MenuItem
+            tid="menu-weight"
+            icon="scale"
+            label="Weight Log"
+            onPress={() => router.push("/weight" as any)}
+          />
+          <MenuItem
+            tid="menu-referrals"
+            icon="gift"
+            label="Refer & Earn"
+            onPress={() => router.push("/referrals" as any)}
+          />
+          <MenuItem
             tid="menu-recipes"
             icon="restaurant"
             label="Recipe Library"

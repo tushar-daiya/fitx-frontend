@@ -10,7 +10,7 @@ import { useAuthStore } from "@/src/store/auth";
 import { COLORS, FONTS, RADIUS, SPACING } from "@/src/theme";
 import type { PaymentOrder } from "@/src/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -38,7 +38,18 @@ type SubEntry = {
   activated_by_user: boolean;
 };
 
-const USD_PRICES: Record<string, number> = { "3m": 25, "6m": 40, "12m": 65 };
+const USD_PRICES: Record<string, number> = { "1m": 12, "3m": 25, "6m": 40, "12m": 65 };
+
+const isTrialPlan = (p: any): boolean => !!p && (p.is_trial === true || p.id === "trial");
+const usdPrice = (p: any): number | undefined =>
+  p?.price_usd ?? USD_PRICES[p?.id];
+
+const DEFAULT_PERKS = [
+  "AI-personalised workout & diet plans",
+  "Unlimited meal photo scans",
+  "Your 24/7 AI fitness coach",
+  "Full recipe library",
+];
 
 function fmtDate(iso: string): string {
   try {
@@ -93,13 +104,22 @@ function buildRazorpayHtml(order: PaymentOrder): string {
 export default function Subscription() {
   const router = useRouter();
   const { refresh } = useAuthStore();
+  const { firstRun: firstRunParam } = useLocalSearchParams<{ firstRun?: string }>();
+  const firstRun = firstRunParam === "1";
   const [region, setRegion] = useState<Region>("in");
   const [selected, setSelected] = useState<string>("");
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [webviewHtml, setWebviewHtml] = useState<string | null>(null);
 
-  const { data: plans = [], isLoading: plansLoading } = useSubscriptionPlans();
+  const { data: rawPlans = [], isLoading: plansLoading } = useSubscriptionPlans();
+  // Trial (if eligible) always first, rest keep backend order.
+  const plans = React.useMemo(
+    () => [...rawPlans.filter(isTrialPlan), ...rawPlans.filter((p) => !isTrialPlan(p))],
+    [rawPlans],
+  );
+  const trialPlan = plans.find(isTrialPlan);
+  const trialDays = trialPlan?.days ?? 7;
   const { data: status, refetch: refetchStatus } = useSubscriptionStatus();
   const createOrder = useCreateOrder();
   const verifyPayment = useVerifyPayment();
@@ -107,8 +127,30 @@ export default function Subscription() {
 
   // Set default selected plan once plans load
   React.useEffect(() => {
-    if (plans.length > 0 && !selected) setSelected(plans[0].id);
+    if (plans.length > 0 && !selected) {
+      // First-run: preselect the trial if eligible, else the popular paid plan.
+      const pick = firstRun
+        ? (trialPlan ?? plans.find((p) => p.popular) ?? plans[0])
+        : plans[0];
+      setSelected(pick.id);
+    }
   }, [plans]);
+
+  // First-run users who somehow already have an active plan skip this screen.
+  React.useEffect(() => {
+    if (firstRun && status?.active) router.replace("/(tabs)/home");
+  }, [firstRun, status?.active]);
+
+  const viewedTracked = React.useRef(false);
+  React.useEffect(() => {
+    if (firstRun && !plansLoading && !viewedTracked.current) {
+      viewedTracked.current = true;
+      track("plans_viewed_at_signup", {
+        trial_available: !!trialPlan,
+        plan_count: plans.length,
+      });
+    }
+  }, [firstRun, plansLoading, plans.length]);
 
   const queuedPlanIds = new Set<string>([
     ...(status?.active_plans.map((s) => s.plan) ?? []),
@@ -119,6 +161,7 @@ export default function Subscription() {
     createOrder.isPending || verifyPayment.isPending || subscribe.isPending;
 
   const startTrial = () => {
+    track("trial_chosen", { source: firstRun ? "signup" : "plans" });
     track("begin_checkout", { plan: "trial", is_trial: true });
     subscribe.mutate("trial", {
       onSuccess: async (res) => {
@@ -126,6 +169,10 @@ export default function Subscription() {
           plan: "trial",
           value: 0,
           trial_ends: res?.ends,
+        });
+        AppEventsLogger.logEvent(AppEventsLogger.AppEvents.StartTrial, {
+          fb_content_type: "subscription",
+          fb_description: "trial",
         });
         await refresh();
         router.replace("/(tabs)/home");
@@ -140,7 +187,13 @@ export default function Subscription() {
   const payWithWebView = () => {
     const currency = region === "in" ? "INR" : "USD";
     const plan = plans.find((p) => p.id === selected);
-    const value = region === "in" ? plan?.price : USD_PRICES[selected];
+    const value = region === "in" ? plan?.price : usdPrice(plan);
+    track("paid_plan_chosen", {
+      plan: selected,
+      currency,
+      value: value ?? 0,
+      source: firstRun ? "signup" : "plans",
+    });
     track("begin_checkout", {
       plan: selected,
       currency,
@@ -181,20 +234,20 @@ export default function Subscription() {
   };
 
   const onSubscribe = () => {
-    if (selected === "trial") return startTrial();
+    if (isTrialPlan(plans.find((p) => p.id === selected))) return startTrial();
     return payWithWebView();
   };
 
   const displayPrice = (p: any) => {
     if (p.price === 0) return "FREE";
     if (region === "in") return `₹${p.price}`;
-    return `$${USD_PRICES[p.id] ?? "—"}`;
+    return `$${usdPrice(p) ?? "—"}`;
   };
 
   const ctaLabel = () => {
     if (!selected) return "LOADING…";
-    if (selected === "trial") return "START FREE TRIAL";
     const plan = plans.find((p) => p.id === selected);
+    if (isTrialPlan(plan)) return "START FREE TRIAL";
     if (!plan) return "PROCEED TO PAY";
     const queued = queuedPlanIds.has(selected);
     return queued
@@ -203,7 +256,10 @@ export default function Subscription() {
   };
 
   const ctaDisabled =
-    busy || !selected || (selected !== "trial" && queuedPlanIds.has(selected));
+    busy ||
+    !selected ||
+    (!isTrialPlan(plans.find((p) => p.id === selected)) &&
+      queuedPlanIds.has(selected));
 
   return (
     <SafeAreaView
@@ -212,18 +268,23 @@ export default function Subscription() {
       edges={["top"]}
     >
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={26} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Subscription</Text>
+        {firstRun ? (
+          <View style={{ width: 26 }} />
+        ) : (
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={26} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+        )}
+        <Text style={styles.headerTitle}>{firstRun ? "Choose your plan" : "Subscription"}</Text>
         <View style={{ width: 26 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Your Plans</Text>
+        <Text style={styles.title}>{firstRun ? "You're all set!" : "Your Plans"}</Text>
         <Text style={styles.sub}>
-          7-day free trial. Premium features include AI plans, meal scanner &
-          coach.
+          {trialPlan
+            ? `${trialDays}-day free trial. Premium features include AI plans, meal scanner & coach.`
+            : "Premium features include AI plans, meal scanner & coach."}
         </Text>
 
         {status?.active_plans && status.active_plans.length > 0 && (
@@ -265,7 +326,9 @@ export default function Subscription() {
             <View style={styles.welcomeBanner}>
               <Ionicons name="sparkles" size={20} color={COLORS.goldPremium} />
               <Text style={styles.welcomeText}>
-                Start your 7-day free trial or pick a plan to unlock everything.
+                {trialPlan
+                  ? `Start your ${trialDays}-day free trial or pick a plan to unlock everything.`
+                  : "Pick a plan to unlock everything."}
               </Text>
             </View>
           ))}
@@ -291,7 +354,7 @@ export default function Subscription() {
         )}
 
         <View style={styles.divider} />
-        <Text style={styles.title2}>Add a New Plan</Text>
+        <Text style={styles.title2}>{firstRun ? "Pick how to start" : "Add a New Plan"}</Text>
 
         <View style={styles.regionRow}>
           <TouchableOpacity
@@ -338,7 +401,10 @@ export default function Subscription() {
           </TouchableOpacity>
         </View>
 
-        {plans.map((p) => {
+        {plans.map((p, idx) => {
+          const trialCard = isTrialPlan(p);
+          const showPaidHeader =
+            firstRun && !trialCard && (idx === 0 || isTrialPlan(plans[idx - 1]));
           const isSel = selected === p.id;
           const isActive = status?.active_plans.some((s) => s.plan === p.id);
           const isUpcoming = status?.upcoming_plans.some(
@@ -346,17 +412,22 @@ export default function Subscription() {
           );
           const isQueued = isActive || isUpcoming;
           return (
+            <React.Fragment key={p.id}>
+            {showPaidHeader && (
+              <Text style={styles.title2}>
+                {trialPlan ? "Or buy a plan directly" : "Choose a plan"}
+              </Text>
+            )}
             <TouchableOpacity
-              key={p.id}
               testID={`plan-${p.id}`}
               activeOpacity={0.9}
               onPress={() => {
                 setSelected(p.id);
                 track("select_item", {
                   item_id: p.id,
-                  is_trial: p.id === "trial",
+                  is_trial: trialCard,
                   currency: region === "in" ? "INR" : "USD",
-                  value: region === "in" ? p.price : (USD_PRICES[p.id] ?? 0),
+                  value: region === "in" ? p.price : (usdPrice(p) ?? 0),
                 });
               }}
               style={[
@@ -374,9 +445,11 @@ export default function Subscription() {
                 <View style={[styles.badge, styles.badgeUpcoming]}>
                   <Text style={styles.badgeText}>QUEUED</Text>
                 </View>
-              ) : p.popular ? (
+              ) : p.badge || p.popular ? (
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>MOST POPULAR</Text>
+                  <Text style={styles.badgeText}>
+                    {(p.badge || "MOST POPULAR").toUpperCase()}
+                  </Text>
                 </View>
               ) : null}
 
@@ -393,7 +466,7 @@ export default function Subscription() {
                   )}
                 </View>
               </View>
-              {p.perks.map((perk: string, i: number) => (
+              {(p.perks?.length ? p.perks : DEFAULT_PERKS).map((perk: string, i: number) => (
                 <View key={i} style={styles.perkRow}>
                   <Ionicons
                     name="checkmark-circle"
@@ -404,10 +477,11 @@ export default function Subscription() {
                 </View>
               ))}
             </TouchableOpacity>
+            </React.Fragment>
           );
         })}
 
-        {plans.length > 0 && !plans.some((p) => p.id === "trial") && (
+        {plans.length > 0 && !trialPlan && !firstRun && (
           <View style={styles.trialUsedCard}>
             <Ionicons
               name="checkmark-circle"
@@ -415,7 +489,7 @@ export default function Subscription() {
               color={COLORS.textMuted}
             />
             <Text style={styles.trialUsedText}>
-              7-Day Free Trial — already used on this account
+              Free trial — already used on this account
             </Text>
           </View>
         )}
@@ -476,7 +550,7 @@ export default function Subscription() {
                         const plan = plans.find((p) => p.id === selected);
                         const currency = region === "in" ? "INR" : "USD";
                         const value =
-                          region === "in" ? plan?.price : USD_PRICES[selected];
+                          region === "in" ? plan?.price : usdPrice(plan);
                         track("purchase", {
                           transaction_id: msg.razorpay_payment_id,
                           plan: selected,
@@ -491,6 +565,10 @@ export default function Subscription() {
                         await refresh();
                         refetchStatus();
                         const isQueued = result.status === "upcoming";
+                        if (firstRun && !isQueued) {
+                          router.replace("/(tabs)/home");
+                          return;
+                        }
                         Alert.alert(
                           isQueued ? "Plan Queued" : "Welcome to FitX Premium",
                           isQueued

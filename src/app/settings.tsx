@@ -10,11 +10,12 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/auth";
 import { useI18nStore } from "@/src/store/i18n";
@@ -44,6 +45,7 @@ function validateNumericField(raw: string, key: LimitKey): string | null {
 
 export default function Settings() {
   const router = useRouter();
+  const qc = useQueryClient();
   const { user, refresh, changePhoneRequest } = useAuthStore();
   const { lang, setLang, t } = useI18nStore();
   const p = user?.profile;
@@ -84,10 +86,22 @@ export default function Settings() {
 
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<LimitKey, string>>>({});
 
+  // Accounts that predate the flag count as opted in.
+  const marketingOn = user?.marketing_opt_in !== false;
+  const setMarketing = useMutation({
+    mutationFn: (marketing_opt_in: boolean) =>
+      apiFetch("/users/marketing", { method: "PATCH", body: { marketing_opt_in } }),
+    onSuccess: () => refresh(),
+    onError: (e: any) => Alert.alert("Error", e.message),
+  });
+
   const updateProfile = useMutation({
     mutationFn: (body: object) => apiFetch("/users/profile", { method: "PATCH", body }),
     onSuccess: async () => {
       await refresh();
+      // A changed weight is logged as a weigh-in, so progress and history move too.
+      qc.invalidateQueries({ queryKey: ["avatar-progress"] });
+      qc.invalidateQueries({ queryKey: ["weight-history"] });
       Alert.alert("Saved", "Your preferences have been updated");
     },
     onError: (e: any) => Alert.alert("Error", e.message),
@@ -191,6 +205,20 @@ export default function Settings() {
               </TouchableOpacity>
             </View>
           )}
+
+          <View style={styles.linkCard}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={styles.linkLabel}>WhatsApp offers & updates</Text>
+              <Text style={styles.linkSub}>Receive occasional offers and news from FitX on WhatsApp</Text>
+            </View>
+            <Switch
+              testID="marketing-toggle"
+              value={marketingOn}
+              disabled={setMarketing.isPending}
+              onValueChange={(v) => setMarketing.mutate(v)}
+              trackColor={{ true: COLORS.goldPremium, false: COLORS.surface2 }}
+            />
+          </View>
 
           <Text style={styles.section}>GENDER</Text>
           <View style={styles.row}>

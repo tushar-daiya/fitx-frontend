@@ -58,7 +58,8 @@ type AuthState = {
     phone: string,
     password: string,
     name: string,
-  ) => Promise<{ phone: string }>;
+    opts?: { referralCode?: string; marketingOptIn?: boolean },
+  ) => Promise<{ phone: string; referralApplied: boolean }>;
   verifySignupOtp: (phone: string, otp: string) => Promise<void>;
   resendOtp: (phone: string) => Promise<void>;
   collectPhone: (phone: string) => Promise<void>;
@@ -131,14 +132,21 @@ export const useAuthStore = create<AuthState>()(
         await completeSession(auth, "password", false);
       },
 
-      signup: async (email, phone, password, name) => {
+      signup: async (email, phone, password, name, opts) => {
         const r = await apiFetch<PreAuthResponse>("/auth/signup", {
           method: "POST",
-          body: { email, phone, password, name },
+          body: {
+            email,
+            phone,
+            password,
+            name,
+            referral_code: opts?.referralCode || undefined,
+            marketing_opt_in: opts?.marketingOptIn ?? true,
+          },
           auth: false,
         });
         await setPreAuthToken(r.pre_auth_token);
-        return { phone: r.phone ?? phone };
+        return { phone: r.phone ?? phone, referralApplied: !!r.referral_applied };
       },
 
       verifySignupOtp: async (phone, otp) => {
